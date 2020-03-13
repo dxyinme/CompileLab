@@ -1,6 +1,9 @@
 reend.txt 是关键字和终结符集合
-dfa_IDN.txt 是变量的dfa
+
+XXXXXDFA.txt 命名规范
+
 dfa撰写规范，请保证读入的是一个dfa
+
 ```
 n m                            #n是状态数，m是转移数，状态编号从0开始
 start                          #start是起始状态编号

@@ -5,6 +5,7 @@
 #include<algorithm>
 #include<vector>
 #include<set>
+#include<map>
 #include<fstream>
 
 using namespace std;
@@ -15,8 +16,9 @@ namespace Lexer{
 	
 	int cntDFA ;
 	
-	void ERROR(){
-		cerr << "error!!!" << endl;
+	void ERROR(string v = ""){
+		cerr << v <<" error!!!" << endl;
+		exit(1);
 	}
 	
 	struct result{
@@ -112,17 +114,75 @@ namespace Lexer{
 		return context[nowRow][nowCol];
 	}
 	
-	void goNumber(){
-		DFA dfa = dfaList[DFAnum["Integer"]];
-		int now = dfa.start;
+	/* 查看nc是否是某终结符的开头 */
+	bool inEnd(int nc){
 		string name = "";
-		cerr << " ? " << endl;
+		name.push_back(nc);
+		if(!endNum.count(name))return false;
+		else return true;
+	}
+	
+	
+	/* 识别终结符 */
+	void goEnd(){
+		string name = "";
+		int nc = nextchar();
+		bool flag = 0;
+		while(((char)nc) == ' ' || ((char)nc) == '\n' || ((char)nc) == '\r'){
+			flag = 1;
+			nc = nextchar();
+		}
+		if(flag){
+			prechar(); 
+			return ;
+		}
+		if(nc == -1) return ;
+		name.push_back((char)nc);
+		nc = nextchar();
+		string name2 = name;
+		name2.push_back((char)nc);
+		if(endNum.count(name2)){
+			LexRes.push_back((result){name2 , name2 , " "});
+			return ;
+		}
+		prechar();
+		if(endNum.count(name)){
+			LexRes.push_back((result){name , name , " "});
+			return ;
+		}
+		cout << name << " " << name2 <<endl;
+		ERROR("end");
+		return ;
+	}
+	
+	
+	/* 把解析结果存下来 */
+	void putRes(string name , string type){
+		if(type == "Integer"){
+			LexRes.push_back((result){type , name , name});
+		}
+		if(type == "VariableOrKeyword"){
+			if(!endNum.count(name)){
+				LexRes.push_back((result){"Variable" , name , name});
+			}
+			else{
+				LexRes.push_back((result){name , name , " "});
+			}
+		}
+	}
+	
+	/* 跑dfa */
+	void goDFA(string typeLine){
+		DFA dfa = dfaList[DFAnum[typeLine]];
+		int now = dfa.start;
+		string name = "" , type = typeLine;
 		for(;;){
 			int nc = nextchar();
 			if(!dfa.mp[now].count(nc)){
 				if(dfa.isEnd[now]){
-					LexRes.push_back((result){"CONST" , name , name});
-					prechar();
+					putRes(name , typeLine);
+					int oc = prechar();
+					//cout << (char) oc << endl;
 					return ;
 				}
 				else{
@@ -136,7 +196,7 @@ namespace Lexer{
 		}
 	}
 	
-	void goEnd(){
+	void goNotes(){
 		//todo
 	}
 	
@@ -153,8 +213,8 @@ namespace Lexer{
 		}
 		in.close();
 		init();
-		
 		addDFA("IntegerDFA.txt");
+		addDFA("VariableOrKeywordDFA.txt");
 		string now = "";
 		in.open(FileName.c_str());
 		while(getline(in , now)){
@@ -166,7 +226,16 @@ namespace Lexer{
 		while((nc = nextchar()) != -1){
 			if(isdigit(nc)){
 				prechar();
-				goNumber();
+				goDFA("Integer");
+				goEnd();
+			}
+			else if(nc == '_' || isalpha(nc)){
+				prechar();
+				goDFA("VariableOrKeyword");
+				goEnd();
+			}
+			else if(inEnd(nc)){
+				prechar();
 				goEnd();
 			}
 			else{

@@ -122,6 +122,18 @@ namespace Lexer{
 		else return true;
 	}
 	
+	/* 查看nc是否是注释的开头 */
+	bool isNotes(int nc){
+		string name = "";
+		name.push_back(nc);
+		name.push_back(nextchar());
+		bool res;
+		if(name == "/*") res = 1;
+		else res = 0;
+		prechar();
+		return res;
+	}
+	
 	
 	/* 识别终结符 */
 	void goEnd(){
@@ -158,6 +170,7 @@ namespace Lexer{
 	
 	/* 把解析结果存下来 */
 	void putRes(string name , string type){
+		//cout << name << endl;
 		if(type == "Integer"){
 			LexRes.push_back((result){type , name , name});
 		}
@@ -168,6 +181,9 @@ namespace Lexer{
 			else{
 				LexRes.push_back((result){name , name , " "});
 			}
+		}
+		if(type == "Notes"){
+			LexRes.push_back((result){"Notes" , name , name});
 		}
 	}
 	
@@ -196,9 +212,6 @@ namespace Lexer{
 		}
 	}
 	
-	void goNotes(){
-		//todo
-	}
 	
 	/* 词法分析 */
 	int goLex( string FileName ){
@@ -215,6 +228,7 @@ namespace Lexer{
 		init();
 		addDFA("IntegerDFA.txt");
 		addDFA("VariableOrKeywordDFA.txt");
+		addDFA("NotesDFA.txt");
 		string now = "";
 		in.open(FileName.c_str());
 		while(getline(in , now)){
@@ -233,6 +247,11 @@ namespace Lexer{
 				prechar();
 				goDFA("VariableOrKeyword");
 				goEnd();
+			}
+			else if(isNotes(nc)){
+				prechar();
+				//cout << "??????????" << endl;
+				goDFA("Notes");
 			}
 			else if(inEnd(nc)){
 				prechar();

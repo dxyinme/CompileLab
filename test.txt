@@ -1,5 +1,8 @@
 
-int o=12;
+int o=12;/*
+ test ??
+??
+*/
 if(o==1213){
-return 1;
+return 1;/*??t est*** **/
 }

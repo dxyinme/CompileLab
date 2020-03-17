@@ -1,8 +1,6 @@
 
-int o=12;/*
- test ??
-??
-*/
+int o444=12;/* ~~UU有有有 */
+int c = 5;
 if(o==1213){
 return 1;/*??t est*** **/
 }

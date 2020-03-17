@@ -194,6 +194,16 @@ namespace Lexer{
 		string name = "" , type = typeLine;
 		for(;;){
 			int nc = nextchar();
+			if(nc < -1) nc = 32;
+			if(typeLine == "Notes"){
+				//cout << nc <<" " << now << endl;
+				if(dfa.isEnd[now]){
+					//cout << name <<endl;
+					putRes(name , typeLine);
+					prechar();
+					return ;
+				}
+			}
 			if(!dfa.mp[now].count(nc)){
 				if(dfa.isEnd[now]){
 					putRes(name , typeLine);

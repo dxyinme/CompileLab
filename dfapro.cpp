@@ -45,6 +45,9 @@ void VariableOrKeywordDFA(){
 		vec.push_back((edge){ 1 , 1 , (int)'A' + i});
 		vec.push_back((edge){ 1 , 1 , (int)'a' + i});
 	}
+	for(int i=0;i<10;i++){
+		vec.push_back((edge){ 1 , 1 , (int)'0' + i});
+	}
 	vec.push_back((edge){1 , 1 , (int)'_'});
 	out << n << " " << vec.size() << endl ;
 	out << 0 << endl;
@@ -63,11 +66,14 @@ void NotesDFA(){
 	int n = 5 ;
 	vec.push_back((edge){ 0 , 1 , (int)'/'});
 	vec.push_back((edge){ 1 , 2 , (int)'*'});
-	for(int i=0;i<256;i++){
-		if(((char)i) != '*'){
-			vec.push_back((edge){ 2 , 2 , i});
-			vec.push_back((edge){ 3 , 2 , i});
-		}
+	for(int i=-128;i<256;i++){
+		if(i == -1)continue;
+		if((char)i == '*')continue;
+		if((char)i == '/')continue;
+		
+		vec.push_back((edge){ 2 , 2 , i});
+		vec.push_back((edge){ 3 , 2 , i});
+		
 	}
 	vec.push_back((edge){2 , 3 , (int)'*'});
 	vec.push_back((edge){3 , 4 , (int)'/'});
@@ -82,6 +88,8 @@ void NotesDFA(){
 }
 
 int main(){
+	//char s[4]  = "孑";
+	//cout << (int)s[0] <<" "<< (int)s[1] << endl; 
 	IntegerDFA();
 	VariableOrKeywordDFA();
 	NotesDFA();

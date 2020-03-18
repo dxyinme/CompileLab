@@ -171,8 +171,8 @@ namespace Lexer{
 	/* 把解析结果存下来 */
 	void putRes(string name , string type){
 		//cout << name << endl;
-		if(type == "Integer"){
-			LexRes.push_back((result){type , name , name});
+		if(type == "number"){
+			LexRes.push_back((result){"Const" , name , name});
 		}
 		if(type == "VariableOrKeyword"){
 			if(!endNum.count(name)){
@@ -236,7 +236,7 @@ namespace Lexer{
 		}
 		in.close();
 		init();
-		addDFA("IntegerDFA.txt");
+		addDFA("numberDFA.txt");
 		addDFA("VariableOrKeywordDFA.txt");
 		addDFA("NotesDFA.txt");
 		string now = "";
@@ -249,7 +249,7 @@ namespace Lexer{
 		while((nc = nextchar()) != -1){
 			if(isdigit(nc)){
 				prechar();
-				goDFA("Integer");
+				goDFA("number");
 				goEnd();
 			}
 			else if(nc == '_' || isalpha(nc)){

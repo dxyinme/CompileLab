@@ -243,7 +243,6 @@ namespace Lexer{
 		in.open(FileName.c_str());
 		while(getline(in , now)){
 			context.push_back(now); now.push_back('\n');
-			//cout<< now << " "<< context.size() << endl;
 		}
 		in.close();
 		int nc;

@@ -12,6 +12,7 @@ using namespace std;
 
 
 int main(){
+	cout<<"Ð¡²âÊÔ"<<endl;
 	Lexer::goLex("test.txt");
 	Lexer::print();
 	return 0;

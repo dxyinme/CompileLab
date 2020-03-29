@@ -12,3 +12,15 @@ cnt end[1] end[2] ... end[cnt] #表示若干个终结状态的编号
 #其他终结符请到reend里面找对应的编号
 
 ```
+win
+```cmd
+g++ main.cpp -o main --std=gnu++17
+main
+```
+linux/mac
+```sh
+g++ main.cpp -o main --std=c++17
+main
+```
+
+

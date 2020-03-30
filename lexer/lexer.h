@@ -75,7 +75,7 @@ namespace Lexer{
 		now.build(FileName);
 		dfaList.push_back(now);
 		string name = "";
-		for(int i=0;i + 7 < FileName.size();i++){
+		for(int i=4;i + 7 < FileName.size();i++){
 			name.push_back(FileName[i]);
 		}
 		cout << name << " " << FileName << endl;
@@ -247,8 +247,9 @@ namespace Lexer{
 	
 	/* 词法分析 */
 	int goLex( string FileName ){
+		string prefix = "txt/";
 		ifstream in;
-		in.open("reend.txt");
+		in.open(prefix+"reend.txt");
 		int num; in >> num;
 		for(int i=1;i<=num;i++){
 			string End ;
@@ -258,9 +259,9 @@ namespace Lexer{
 		}
 		in.close();
 		init();
-		addDFA("numberDFA.txt");
-		addDFA("VariableOrKeywordDFA.txt");
-		addDFA("NotesDFA.txt");
+		addDFA(prefix+"numberDFA.txt");
+		addDFA(prefix+"VariableOrKeywordDFA.txt");
+		addDFA(prefix+"NotesDFA.txt");
 		string now = "";
 		in.open(FileName.c_str());
 		while(getline(in , now)){

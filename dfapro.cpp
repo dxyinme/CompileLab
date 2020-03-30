@@ -4,9 +4,9 @@
 #include<vector>
 #define ll long long 
 using namespace std;
-
 const int endL = 282;
 const int endR = 314;
+string prefix = "txt/";
 struct edge{
 	int u,v,w;
 };
@@ -14,7 +14,7 @@ struct edge{
 //INTEGER
 void IntegerDFA(){
 	ofstream out;
-	out.open("IntegerDFA.txt");
+	out.open(prefix+"IntegerDFA.txt");
 	int n = 2;
 	vector<edge> vec;
 	for(int i=0;i<=9;i++){
@@ -36,7 +36,7 @@ void IntegerDFA(){
 // VariableOrKeyword
 void VariableOrKeywordDFA(){
 	ofstream out ;
-	out.open("VariableOrKeywordDFA.txt");
+	out.open(prefix+"VariableOrKeywordDFA.txt");
 	vector<edge> vec;
 	int n = 2;
 	for(int i=0;i<26;i++) {
@@ -64,7 +64,7 @@ void VariableOrKeywordDFA(){
 // Notes
 void NotesDFA(){
 	ofstream out ; 
-	out.open("NotesDFA.txt");
+	out.open(prefix+"NotesDFA.txt");
 	vector<edge> vec;
 	int n = 5 ;
 	vec.push_back((edge){ 0 , 1 , (int)'/'});

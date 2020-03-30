@@ -8,12 +8,12 @@
 #include "lexer/lexer.h"
 using namespace std;
 
-
+string prefix = "txt/";
 
 
 int main(){
 	cout<<"Ð¡²âÊÔ"<<endl;
-	Lexer::goLex("test.txt");
+	Lexer::goLex(prefix+"test.txt");
 	Lexer::print();
 	return 0;
 }

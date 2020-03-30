@@ -16,9 +16,10 @@ namespace Lexer{
 	
 	int cntDFA ;
 	
-	void ERROR(string v = ""){
-		cerr << v <<" error!!!" << endl;
-		exit(1);
+	vector<pair<int , string> > errorVec;
+	
+	void ERROR(int line , string msg = ""){
+		errorVec.push_back({line , msg});
 	}
 	
 	struct result{
@@ -89,6 +90,7 @@ namespace Lexer{
 		dfaList.clear();
 		DFAnum.clear();
 		context.clear();
+		errorVec.clear();
 		nowRow = 0;
 		nowCol = -1;
 	}
@@ -100,7 +102,13 @@ namespace Lexer{
 			nowRow ++;
 			nowCol = 0;
 		}
-		if(nowRow >= context.size()) return -1;
+		
+		//cout << nowRow << " " << nowCol << endl;
+		
+		if(nowRow >= context.size()){
+			nowRow = context.size();
+			return -1;
+		}
 		return context[nowRow][nowCol];
 	}
 	
@@ -108,7 +116,10 @@ namespace Lexer{
 		--nowCol ;
 		if(nowCol < 0){
 			nowRow --;
-			if(nowRow < 0) return -1;
+			if(nowRow < 0) {
+				nowRow = 0;
+				return -1;
+			}
 			nowCol = (int)context[nowRow].size() - 1;
 		}
 		return context[nowRow][nowCol];
@@ -162,8 +173,9 @@ namespace Lexer{
 			LexRes.push_back((result){name , name , " "});
 			return ;
 		}
-		cout << name << " " << name2 <<endl;
-		ERROR("end");
+		//cout << name << " " << name2 <<endl;
+		
+		ERROR(nowRow,"error : " + name);
 		return ;
 	}
 	
@@ -193,7 +205,11 @@ namespace Lexer{
 		int now = dfa.start;
 		string name = "" , type = typeLine;
 		for(;;){
-			int nc = nextchar();
+			int nc = nextchar();  // cout << nowRow << " " << nowCol << " " << nc << endl;
+			if(nc == -1) {
+				ERROR(nowRow , "error ：" + name);
+				return ;
+			}
 			if(nc < -1) nc = 32;
 			if(typeLine == "Notes"){
 				//cout << nc <<" " << now << endl;
@@ -212,7 +228,13 @@ namespace Lexer{
 					return ;
 				}
 				else{
-					ERROR();
+					while(nc != -1 && !inEnd(nc)){
+						name.push_back((char)nc);
+						nc = nextchar();
+					}
+					ERROR(nowRow , "error : " + name);
+					prechar();
+					return ;
 				}
 			}
 			else{
@@ -242,9 +264,12 @@ namespace Lexer{
 		string now = "";
 		in.open(FileName.c_str());
 		while(getline(in , now)){
-			context.push_back(now); now.push_back('\n');
+			now.push_back('\n');
+			context.push_back(now); 
 		}
 		in.close();
+		//cout << context.size() << endl;
+		//for (auto it : context){cout << it << endl;}
 		int nc;
 		while((nc = nextchar()) != -1){
 			if(isdigit(nc)){
@@ -276,8 +301,15 @@ namespace Lexer{
 	
 	/*输出结果*/
 	void print(){
-		for(int i=0;i<LexRes.size();i++){
-			cout << LexRes[i].name << " <" << LexRes[i].type << "," << LexRes[i].value << ">" << "\n";
+		if(errorVec.size() == 0){
+			for(int i=0;i<LexRes.size();i++){
+				cout << LexRes[i].name << " <" << LexRes[i].type << "," << LexRes[i].value << ">" << "\n";
+			}
+		}
+		else{
+			for(int i=0;i<errorVec.size();i++){
+				cout << "line:" << errorVec[i].first << " " << errorVec[i].second << "\n";
+			}
 		}
 	}
 }

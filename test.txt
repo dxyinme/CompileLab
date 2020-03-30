@@ -1,5 +1,8 @@
-int f = 3eqzzzz;
-/**ee**/
+int f = 3e2;
+/**中中
+
+
+中*/
 int c =4;
 if(c == 22){
 	return 3;

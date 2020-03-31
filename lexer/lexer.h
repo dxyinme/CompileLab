@@ -11,7 +11,7 @@
 using namespace std;
 
 namespace Lexer{
-	
+	const int classLen = 12;
 	const int BUFFSZ = 1e3;
 	
 	int cntDFA ;
@@ -20,6 +20,12 @@ namespace Lexer{
 	
 	void ERROR(int line , string msg = ""){
 		errorVec.push_back({line , msg});
+	}
+	
+	string classFix(string o){
+		if(o.size() >= classLen) return o;
+		while(o.size() < classLen)o.push_back(' ');
+		return o;
 	}
 	
 	struct result{
@@ -195,6 +201,7 @@ namespace Lexer{
 			}
 		}
 		if(type == "Notes"){
+			name = "/* ... */";
 			LexRes.push_back((result){"Notes" , name , name});
 		}
 	}
@@ -304,7 +311,7 @@ namespace Lexer{
 	void print(){
 		if(errorVec.size() == 0){
 			for(int i=0;i<LexRes.size();i++){
-				cout << LexRes[i].name << " <" << LexRes[i].type << "," << LexRes[i].value << ">" << "\n";
+				cout << classFix(LexRes[i].name) << " <" << classFix(LexRes[i].type) << "," << classFix(LexRes[i].value) << ">" << "\n";
 			}
 		}
 		else{

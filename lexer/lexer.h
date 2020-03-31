@@ -71,6 +71,7 @@ namespace Lexer{
 	
 	vector<result> LexRes;
 	vector<DFA> dfaList;
+	map<string , string> endTran;
 	map<string , int> DFAnum;
 	vector<string> context;
 	map<string , int> endNum;
@@ -171,12 +172,12 @@ namespace Lexer{
 		string name2 = name;
 		name2.push_back((char)nc);
 		if(endNum.count(name2)){
-			LexRes.push_back((result){name2 , name2 , "_"});
+			LexRes.push_back((result){endTran[name2] , name2 , "_"});
 			return ;
 		}
 		prechar();
 		if(endNum.count(name)){
-			LexRes.push_back((result){name , name , "_"});
+			LexRes.push_back((result){endTran[name] , name , "_"});
 			return ;
 		}
 		//cout << name << " " << name2 <<endl;
@@ -197,7 +198,7 @@ namespace Lexer{
 				LexRes.push_back((result){"Variable" , name , name});
 			}
 			else{
-				LexRes.push_back((result){name , name , "_"});
+				LexRes.push_back((result){endTran[name] , name , "_"});
 			}
 		}
 		if(type == "Notes"){
@@ -256,13 +257,14 @@ namespace Lexer{
 	int goLex( string FileName ){
 		string prefix = "txt/";
 		ifstream in;
-		in.open(prefix+"reend.txt");
+		in.open(prefix+"reend2.txt");
 		int num; in >> num;
 		for(int i=1;i<=num;i++){
-			string End ;
+			string End,Tran;
 			int Num;
-			in >> End >> Num;
+			in >> End >> Num >> Tran;
 			endNum[End] = Num;
+			endTran[End] = Tran;
 		}
 		in.close();
 		init();

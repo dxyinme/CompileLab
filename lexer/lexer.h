@@ -171,12 +171,12 @@ namespace Lexer{
 		string name2 = name;
 		name2.push_back((char)nc);
 		if(endNum.count(name2)){
-			LexRes.push_back((result){name2 , name2 , " "});
+			LexRes.push_back((result){name2 , name2 , "_"});
 			return ;
 		}
 		prechar();
 		if(endNum.count(name)){
-			LexRes.push_back((result){name , name , " "});
+			LexRes.push_back((result){name , name , "_"});
 			return ;
 		}
 		//cout << name << " " << name2 <<endl;
@@ -197,7 +197,7 @@ namespace Lexer{
 				LexRes.push_back((result){"Variable" , name , name});
 			}
 			else{
-				LexRes.push_back((result){name , name , " "});
+				LexRes.push_back((result){name , name , "_"});
 			}
 		}
 		if(type == "Notes"){

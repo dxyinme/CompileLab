@@ -1,4 +1,4 @@
-45
+46
 int 270 INT
 char 271 CHAR
 int 272 INT
@@ -44,3 +44,4 @@ do 281 DO
 ? 312 ASK
 | 313 BOR
 || 314 OR
+proc 315 PROC

@@ -5,7 +5,7 @@
 #define ll long long 
 using namespace std;
 const int endL = 282;
-const int endR = 314;
+const int endR = 315;
 string prefix = "txt/";
 struct edge{
 	int u,v,w;

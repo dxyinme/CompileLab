@@ -5,6 +5,7 @@
 #include<algorithm>
 #include<vector>
 #include<set>
+#include<stack>
 #include<map>
 #include<fstream>
 
@@ -40,8 +41,26 @@ namespace Parser{
 	 * token序列
 	 */
 	vector<Token> tokenList;
-	
-	void Load(vector<pair<string , pair<string , string > > > lex){
+
+	/**
+	 * stack
+	 */
+	stack<Token> Stack;
+
+	/**
+	 * 预测分析表
+	 */
+	map<string , map<string , string> > mp;
+
+	void loadMap(){
+		string prefix = "txt/";
+		ifstream in;
+		in.open(prefix+"map.txt");
+
+		in.close();
+	}
+
+	void load(vector<pair<string , pair<string , string > > > lex){
 		tokenList.clear();
 		for(auto p : lex){
 			tokenList.push_back((Token){p.first , p.second.first , p.second.second});
@@ -66,6 +85,7 @@ namespace Parser{
 
 	void init(){
 		nowToken = -1;
+		loadMap();
 	}
 	
 	

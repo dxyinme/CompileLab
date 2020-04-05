@@ -23,7 +23,7 @@ int main(){
 	for(int i=0;i<Count;i++){
 		o.push_back(Lexer::LexRes[i].toNormal());
 	}
-	Parser::Load(o);
+	Parser::load(o);
 	Parser::goParser();
 	return 0;
 }

@@ -1,8 +1,10 @@
+
 reend.txt 是关键字和终结符集合
 
 XXXXXDFA.txt 命名规范
 
 dfa撰写规范，请保证读入的是一个dfa
+
 
 ```
 n m                            #n是状态数，m是转移数，状态编号从0开始
@@ -12,15 +14,27 @@ cnt end[1] end[2] ... end[cnt] #表示若干个终结状态的编号
 #其他终结符请到reend里面找对应的编号
 
 ```
+
 win
+
 ```cmd
 g++ main.cpp -o main --std=gnu++17
 main
 ```
+
 linux/mac
+
 ```sh
 g++ main.cpp -o main --std=c++17
-main
+./main
 ```
 
 
+语法分析 dfa 撰写规范
+
+写出类似如下的即可
+''表示ε
+```
+N -> Variable | Const
+L -> [N]L | [N] | ''
+```

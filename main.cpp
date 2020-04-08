@@ -12,6 +12,7 @@ using namespace std;
 string prefix = "txt/";
 
 
+
 int main(){
 	freopen("tmp.txt","w",stdout);
 	Lexer::goLex(prefix+"test.txt");

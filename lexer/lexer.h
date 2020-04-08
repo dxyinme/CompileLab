@@ -32,6 +32,9 @@ namespace Lexer{
 		string type;
 		string name;
 		string value;
+		pair<string , pair<string , string> > toNormal(){
+			return {name , {type , value}} ;
+		}
 	};
 	
 	struct DFA{
@@ -328,16 +331,18 @@ namespace Lexer{
 	}
 	
 	/*输出结果*/
-	void print(){
+	bool print(){
 		if(errorVec.size() == 0){
 			for(int i=0;i<LexRes.size();i++){
 				cout << classFix(LexRes[i].name) << " <" << classFix(LexRes[i].type) << "," << classFix(LexRes[i].value) << ">" <<lineRec[i]<< "\n";
 			}
+			return true;
 		}
 		else{
 			for(int i=0;i<errorVec.size();i++){
 				cout << "line:" << errorVec[i].first << " " << errorVec[i].second << "\n";
 			}
+			return false;
 		}
 	}
 }

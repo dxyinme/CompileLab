@@ -1,0 +1,20 @@
+program -> decls stmts $ #
+block -> { decls stmts } $ #
+decls -> decls decl $ none $ #
+decl -> type Variable ; $ def $ #
+cal -> call Variable ( ) $ #
+type -> type [ Const ] $ basic $ #
+stmts -> stmts stmt $ none $ #
+noelse -> cal ; $ loc = bool ; $ if ( bool ) noelse $ while ( bool ) noelse $ do stmt while ( bool ) ; $ break ; $ block $ #
+stmt -> cal ; $ loc = bool ; $ if ( bool ) noelse $ if ( bool ) noelse else noelse $ while ( bool ) stmt $ do stmt while ( bool ) ; $ break ; $ block $ #
+loc -> loc [ bool ] $ Variable $ #
+bool -> bool || join $ join $ #
+join -> join && equality $ equality $ #
+equality -> equality == rel $ equality != rel $ rel $ #
+rel -> expr < expr $ expr <= expr $ expr >= expr $ expr > expr $ expr $ #
+expr -> expr + term $ expr - term $ term $ #
+term -> term * unary $ term / unary $ unary $ #
+unary -> ! unary $ - unary $ factor $ #
+factor -> ( bool ) $ loc $ Const $ true $ false $ #
+basic -> int $ char $ double $ float $ #
+def -> function Variable ( ) block $ #

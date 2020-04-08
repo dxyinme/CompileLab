@@ -70,6 +70,7 @@ namespace Lexer{
 	};
 	
 	vector<result> LexRes;
+	vector<int> lineRec;
 	vector<DFA> dfaList;
 	map<string , string> endTran;
 	map<string , int> DFAnum;
@@ -173,11 +174,13 @@ namespace Lexer{
 		name2.push_back((char)nc);
 		if(endNum.count(name2)){
 			LexRes.push_back((result){endTran[name2] , name2 , "_"});
+			lineRec.push_back(nowRow);
 			return ;
 		}
 		prechar();
 		if(endNum.count(name)){
 			LexRes.push_back((result){endTran[name] , name , "_"});
+            lineRec.push_back(nowRow);
 			return ;
 		}
 		//cout << name << " " << name2 <<endl;
@@ -192,18 +195,22 @@ namespace Lexer{
 		//cout << name << endl;
 		if(type == "number"){
 			LexRes.push_back((result){"Const" , name , name});
+            lineRec.push_back(nowRow);
 		}
 		if(type == "VariableOrKeyword"){
 			if(!endNum.count(name)){
 				LexRes.push_back((result){"Variable" , name , name});
+                lineRec.push_back(nowRow);
 			}
 			else{
 				LexRes.push_back((result){endTran[name] , name , "_"});
+                lineRec.push_back(nowRow);
 			}
 		}
 		if(type == "Notes"){
 			name = "/* ... */";
 			LexRes.push_back((result){"Notes" , name , name});
+            lineRec.push_back(nowRow);
 		}
 	}
 	
@@ -260,13 +267,23 @@ namespace Lexer{
 		in.open(prefix+"reend2.txt");
 		int num; in >> num;
 		for(int i=1;i<=num;i++){
-			string End,Tran;
+			string End;
 			int Num;
-			in >> End >> Num >> Tran;
+			in >> End >> Num;
 			endNum[End] = Num;
-			endTran[End] = Tran;
 		}
+
 		in.close();
+		//读入词号转换表
+        in.open(prefix+"tran.txt");
+        in >> num;
+        for(int i=1;i<=num;i++){
+            string End,Tran;
+            in >> End >> Tran;
+            endTran[End] = Tran;
+        }
+        in.close();
+
 		init();
 		addDFA(prefix+"numberDFA.txt");
 		addDFA(prefix+"VariableOrKeywordDFA.txt");
@@ -275,12 +292,13 @@ namespace Lexer{
 		in.open(FileName.c_str());
 		while(getline(in , now)){
 			now.push_back('\n');
-			context.push_back(now); 
+			context.push_back(now);
 		}
 		in.close();
 		//cout << context.size() << endl;
 		//for (auto it : context){cout << it << endl;}
 		int nc;
+
 		while((nc = nextchar()) != -1){
 			if(isdigit(nc)){
 				prechar();
@@ -313,7 +331,7 @@ namespace Lexer{
 	void print(){
 		if(errorVec.size() == 0){
 			for(int i=0;i<LexRes.size();i++){
-				cout << classFix(LexRes[i].name) << " <" << classFix(LexRes[i].type) << "," << classFix(LexRes[i].value) << ">" << "\n";
+				cout << classFix(LexRes[i].name) << " <" << classFix(LexRes[i].type) << "," << classFix(LexRes[i].value) << ">" <<lineRec[i]<< "\n";
 			}
 		}
 		else{

@@ -5,15 +5,18 @@
 #include<algorithm>
 #include<fstream>
 #include<map>
-#include "lexer/lexer.h"
+#include <set>
+#include "grammar/grammar.h"
 using namespace std;
 
 string prefix = "txt/";
 
 
 int main(){
-	cout<<"Ð¡²âÊÔ"<<endl;
+	freopen("tmp.txt","w",stdout);
 	Lexer::goLex(prefix+"test.txt");
 	Lexer::print();
+	Grammar::init(prefix+"generator.txt");
+	Grammar::goGrammar(Lexer::LexRes);
 	return 0;
 }

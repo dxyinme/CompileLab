@@ -1,46 +1,50 @@
-45
-int 270 INT
-char 271 CHAR
-int 272 INT
-double 273 LF
-float 274 F
-void 275 VOID
-if 276 IF
-else 277 ELSE
-return 278 RET
-for 279 FOR
-while 280 WHL
-do 281 DO
-; 282 SEM
-{ 283 LBR
-} 284 RBR
-[ 285 LAT
-] 286 RAT
-( 287 LPA
-) 288 RPA
-+ 289 INC
-- 290 SUB
-* 291 MUL
-/ 292 DIV
-++ 293 OINC
--- 294 OSUB
-+= 295 INCE
--= 296 SUBE
-*= 297 MULE
-/= 298 DIVE
-%= 299 MODE
-% 300 MOD
-& 301 BAND
-&& 302 AND
-! 303 NOT
-~ 304 REV
-> 305 G
-< 306 L
->= 307 GE
-<= 308 LE 
-== 309 EQU
-!= 310 NOTE
-= 311 ASS
-? 312 ASK
-| 313 BOR
-|| 314 OR
+49
+int 270
+char 271
+double 273
+float 274
+void 275
+if 276
+else 277
+return 278
+for 279
+while 280
+do 281
+; 282
+{ 283
+} 284
+[ 285
+] 286
+( 287
+) 288
++ 289
+- 290
+* 291
+/ 292
+++ 293
+-- 294
++= 295
+-= 296
+*= 297
+/= 298
+%= 299
+% 300
+& 301
+&& 302
+! 303
+~ 304
+> 305
+< 306
+>= 307
+<= 308
+== 309
+!= 310
+= 311
+? 312
+| 313
+|| 314
+true 315
+false 316
+break 317
+function 318
+call 319

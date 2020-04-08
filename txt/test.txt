@@ -1,9 +1,6 @@
-int f = 3e2;
-/**中中
-
-
-中*/
-int c =4;
-if(c == 22){
-	return 3;
-}
+function p(){x=1;}
+int x;
+x = 1;
+call p();
+if (x==1) x=2; else x = 1;
+do x=1; while(x<2);

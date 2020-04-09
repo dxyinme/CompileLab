@@ -15,6 +15,9 @@ namespace Grammar{
     void getEndSet();
     void getSelectSet();
     void eliNone();
+    /**
+     * 表示串里的终结或非终结字符
+     */
     struct Node{
         bool isEnd;
         int id;
@@ -23,6 +26,9 @@ namespace Grammar{
             return isEnd==b.isEnd&&id==b.id;
         }
     };
+    /**
+     * 表示串，可以拼接、选取后缀等
+     */
     struct Rule{
         vector<Node> rights;
         Rule getSubRule(int lp,int rp){
@@ -59,35 +65,55 @@ namespace Grammar{
             return rights.empty();
         }
     };
+    /**
+     * 中间节点信息
+     */
     struct Mid{
-        string sgn;
-        bool canNone=false,canEnd=false,vis=false;
+        string sgn;//代表符号
+        bool canNone=false,canEnd=false,vis=false;//first集是否有空字符，follow集是否有终结字符，vis用于算first时标记访问
         vector<Rule> rules;
         set<int> follow,first;
         map<int,int> select;
         Mid(){}
         Mid(string &_name):sgn(_name){}
     };
+    /**
+     * id串和节点标号互译
+     */
     vector<string> ends;
     map<string,int> endToId;
     vector<Mid> mids;
     map<string,int> midToId;
-    map<string,int> cnts;
+    //map<string,int> cnts;
+    /**
+     * 语法树节点
+     */
     struct TreeNode{
         vector<int> sons;
-        string name,attr;
-        int lineNum;
-        bool hide=false;
+        string name,attr;//属性、值
+        int lineNum;//行号
+        bool hide=false;//用于删去推导为空的树节点
         TreeNode(){}
         TreeNode(int _n,string _name,string _attr):lineNum(_n),name(_name),attr(_attr){}
     };
+    /**
+     * 语法树
+     */
     vector<TreeNode> resultTree(1);
+    /**
+     * 打印串信息
+     * @param rule 串
+     */
     void print(const Rule &rule){
         for(auto &t:rule.rights){
             if(t.isEnd) cout<<"<"<<ends[t.id]<<"> ";
             else cout<<mids[t.id].sgn<<" ";
         }
     }
+    /**
+     * 打印非终结节点信息
+     * @param mid 非终结节点
+     */
     void print(const Mid &mid){
         cout<<mid.sgn<<" -> ";
         for(auto &t:mid.rules){
@@ -96,6 +122,11 @@ namespace Grammar{
         }
         cout<<endl;
     }
+    /**
+     * 递归打印语法树
+     * @param treeNode 语法树节点
+     * @param deep 深度，用于缩进
+     */
     void print(const TreeNode &treeNode,int deep){
         for(int i = 1;i < deep;i++){
             cout<<"  ";
@@ -109,12 +140,28 @@ namespace Grammar{
             print(resultTree[t],deep+1);
         }
     }
+    /**
+     * 判断是不是某个非终结节点
+     * @param node 字符
+     * @param id 标号
+     * @return 判断结果
+     */
     bool judgeId(const Node &node,int id){
         return !node.isEnd && node.id == id;
     }
+    /**
+     * 节点转换为非终结节点
+     * @param id 标号
+     * @return 非终结节点
+     */
     Node getNode(int id){
         return Node(id,false);
     }
+    /**
+     * 非终结符标号转换为串
+     * @param id 非终结符标号
+     * @return 串
+     */
     Rule getRule(int id){
         Rule res;
         res.rights.clear();
@@ -131,6 +178,11 @@ namespace Grammar{
             endToId[it.second] = (int)ends.size()-1;
         }
     }
+    /**
+     * 尝试添加非终结符，返回标号
+     * @param midName 非终结符名字
+     * @return 标号
+     */
     int addMid(string midName){
         if(midToId.count(midName)) return midToId[midName];
         mids.emplace_back(midName);
@@ -192,6 +244,10 @@ namespace Grammar{
             print(mids[i]);
         }*/
     }
+    /**
+     * 消除直接左递归
+     * @param mId 非终结符标号
+     */
     void eliSelfRecur(int mId){
 
         if(mids[mId].rules.empty()) return;
@@ -216,6 +272,9 @@ namespace Grammar{
         }
         now.erase(now.begin(),now.begin()+spl);
     }
+    /**
+     * 消除间接左递归
+     */
     void eliPassRecur(){
         vector<Rule> copyRule;
         for(int i = 0;i < mids.size();i++){
@@ -237,6 +296,12 @@ namespace Grammar{
             eliSelfRecur(i);
         }
     }
+    /**
+     * 获得两个串的最长公共前缀
+     * @param a 串a
+     * @param b 串b
+     * @return 最长公共前缀
+     */
     Rule getLCP(const Rule& a,const Rule& b){
         Rule res;
         res.rights.clear();
@@ -247,6 +312,9 @@ namespace Grammar{
         }
         return res;
     }
+    /**
+     * 消除公因子
+     */
     void eliCommonPreffix(){
         int cnt=0;
         Rule LCP;
@@ -279,6 +347,9 @@ namespace Grammar{
             }
         }
     }
+    /**
+     * 扫描标记空生成
+     */
     void eliNone(){
         for(auto &now:mids){
             auto it = now.rules.begin();
@@ -291,6 +362,12 @@ namespace Grammar{
             }
         }
     }
+    /**
+     * 获得串的first集
+     * @param rule  串
+     * @param canNone 是否有空字符
+     * @param first 保存结果
+     */
     void getFirst(const Rule &rule, bool &canNone,set<int> &first){
         bool flag = true;
         for(auto &nt:rule.rights){
@@ -309,6 +386,10 @@ namespace Grammar{
         }
         if(flag) canNone = true;
     }
+    /**
+     * 获得非终结节点first集
+     * @param node 节点
+     */
     void getFirst(const Node &node){
         if(node.isEnd) return;
         if(mids[node.id].vis) return;
@@ -317,12 +398,18 @@ namespace Grammar{
             getFirst(t,mids[node.id].canNone,mids[node.id].first);
         }
     }
+    /**
+     * 获取所有节点first集
+     */
     void getFirstSet(){
         int n = (int)mids.size();
         for(int i = 0;i < n;i++){
             getFirst(getNode(i));
         }
     }
+    /**
+     * 获得所有节点follow集
+     */
     void getEndSet(){
         mids[0].canEnd = true;
         bool flag = true;
@@ -365,6 +452,9 @@ namespace Grammar{
             }
         }
     }
+    /**
+     * 获得所有节点select集
+     */
     void getSelectSet(){
         for(auto &mid:mids){
             for(int j = 0;j < mid.rules.size();j++){
@@ -397,6 +487,14 @@ namespace Grammar{
              */
         }
     }
+    /**
+     * 语法树遍历
+     * @param mid 非终结节点
+     * @param treeNode  语法树节点
+     * @param pos 当前词法结果数组位置
+     * @param lex 词法结果数组
+     * @return 0表示成功，-1表示失败
+     */
     int extend(Mid &mid,int treeNode,int &pos,vector<Lexer::result> &lex){
         resultTree[treeNode].hide=true;
         if(pos >= lex.size()){
@@ -433,6 +531,10 @@ namespace Grammar{
         }
         return 0;
     }
+    /**
+     * 消除不需要展示的节点
+     * @param treeNode 语法树节点
+     */
     void eliHide(TreeNode &treeNode){
         auto it = treeNode.sons.begin();
         while(it!=treeNode.sons.end()){
@@ -443,6 +545,10 @@ namespace Grammar{
             }
         }
     }
+    /**
+     * 分析生成语法树
+     * @param lex 词法分析结果
+     */
     void goGrammar(vector<Lexer::result> &lex){
         resultTree[0].lineNum = 0;
         resultTree[0].name = mids[0].sgn;

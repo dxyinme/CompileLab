@@ -38,3 +38,5 @@ g++ main.cpp -o main --std=c++17
 N -> Variable | Const
 L -> [N]L | [N] | ''
 ```
+
+调整目录结构 , 输出结果到 txt/result 中

@@ -6,7 +6,8 @@
 #include<fstream>
 #include<map>
 #include <set>
-#include "grammar/grammar.h"
+#include "lexer/lexer.h"
+#include "parser/parser.h"
 using namespace std;
 
 string prefix = "txt/";
@@ -14,10 +15,17 @@ string prefix = "txt/";
 
 
 int main(){
-	freopen("tmp.txt","w",stdout);
+	//freopen(prefix + "tmp.txt","w",stdout);
 	Lexer::goLex(prefix+"test.txt");
-	Lexer::print();
-	Grammar::init(prefix+"generator.txt");
-	Grammar::goGrammar(Lexer::LexRes);
+	Lexer::print(prefix+"result/"+"lexer.txt");
+	Parser::lineRec = Lexer::lineRec;
+	Parser::endTran = Lexer::endTran;
+	vector<Parser::result> newLexRes;
+	for(auto x : Lexer::LexRes){
+		newLexRes.push_back((Parser::result){x.type , x.name , x.value});
+	} 
+	Parser::init(prefix+"generator.txt");
+	Parser::goParser(newLexRes);
+	Parser::printFile(prefix+"result/"+"parser.txt");
 	return 0;
 }

@@ -1,2 +1,0 @@
-P -> <PROC><Variable><LBR>S<RBR>
-S -> SS

@@ -1,4 +1,18 @@
 function p(){x=1;}
 int x ;
-int y ;
-x = 5 + 4 * 2 - y;
+int z ;
+int[50][32] y ;
+x = 10;
+z = 3;
+x = 5 + 4 * 2 - z;
+y[5][3] = 7 ;
+y[3][1] = x + y[5][z] ;
+call p();
+do{
+    x = x + 1;
+}while(x <= 5);
+if(x + y[1][1] <= 5 - z) {
+
+}else{
+    
+}

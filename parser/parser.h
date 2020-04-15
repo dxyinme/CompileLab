@@ -2,6 +2,7 @@
 // Created by sinemora on 2020/4/7.
 //
 #include <map>
+#include <sstream>
 #include <fstream>
 using namespace std;
 namespace Parser{
@@ -30,6 +31,22 @@ namespace Parser{
 		string name;
 		string value;
 	};
+
+
+    vector<string> errVec; 
+
+    void ERROR(string msg){
+        errVec.push_back(msg);
+    }
+
+    void ERROR(int line,string type,string sgn){
+        stringstream ss;
+        ss.str("");
+        ss << line;
+        string o;
+        ss >> o;
+        errVec.push_back("Error at Line "+o+": can't select "+type+" from "+sgn);
+    }
 
     struct Rule{
         vector<Node> rights;
@@ -184,6 +201,7 @@ namespace Parser{
                 mids[nowMid].rules.push_back(nowRule);
                 nowRule.rights.clear();
             }else{
+                ERROR("Parse Error");
                 cerr<<"Parse Error"<<endl;
                 return;
             }
@@ -414,10 +432,12 @@ namespace Parser{
         resultTree[treeNode].hide=true;
         if(pos >= lex.size()){
             if(mid.canNone) return 0;
+            ERROR("Error :nothing to read!");
             cerr<<"Error :nothing to read!"<<endl;
             return -1;
         }
         if(!mid.select.count(endToId[lex[pos].type])){
+            ERROR(lineRec[pos],lex[pos].type,mid.sgn);
             cerr<<"Error at Line "<<lineRec[pos]<<": can't select "<<lex[pos].type<<" from "<<mid.sgn<<endl;
             return -1;
         }
@@ -435,6 +455,7 @@ namespace Parser{
                 int ret = extend(mids[node.id],(int)resultTree.size()-1,pos,lex);
                 if(ret==-1)return -1;
             }else{
+                ERROR(lineRec[pos],lex[pos].type,mid.sgn);
                 cerr<<"Error at Line "<<lineRec[pos]<<": wrong sign "<<lex[pos].type<<" from "<<mid.sgn<<endl;
             }
         }
@@ -469,7 +490,14 @@ namespace Parser{
     //输出到文件
     void printFile(string filename){
         freopen(filename.c_str() , "w" , stdout);
-        print(resultTree[0] , 1);
+        if(errVec.size() == 0){
+            print(resultTree[0] , 1);
+        }
+        else{
+            for(auto s : errVec){
+                cout << s << endl;
+            }
+        }
         fclose(stdout);
     }
 }

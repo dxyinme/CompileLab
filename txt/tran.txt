@@ -1,4 +1,4 @@
-52
+53
 int INT
 char CHAR
 double LF
@@ -51,3 +51,4 @@ Variable Variable
 Const Const
 call CALL
 function FUNC
+record RECORD

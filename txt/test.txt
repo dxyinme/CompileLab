@@ -1,6 +1,7 @@
 function p(){x=1;}
-int x ;
+int x = 1;
 int z ;
+record recc ;
 int[50][32] y ;
 x = 10;
 z = 3;
@@ -12,7 +13,7 @@ do{
     x = x + 1;
 }while(x <= 5);
 if(x + y[1][1] <= 5 - z) {
-
+    x = 13;
 }else{
-    
+    x = 55;
 }

@@ -218,10 +218,10 @@ namespace Parser{
                 cout<<ends[t]<<" ";
             }
             cout<<endl;
-        }
+        }*/
         for(int i = 0;i < mids.size();i++){
             print(mids[i]);
-        }*/
+        }
     }
     void eliSelfRecur(int mId){
 
@@ -368,9 +368,6 @@ namespace Parser{
                                 bool canNone = false;
                                 set<int> first;
                                 getFirst(mids[j].rules[tt].getSuffix(k + 1), canNone, first);
-                                /*cout << mids[i].sgn << " : ";
-                                print(mids[i].rules[j].getSuffix(k + 1));
-                                cout << endl;*/
                                 if (canNone) {
                                     if (mids[j].canEnd && !mids[i].canEnd) {
                                         flag = true;
@@ -404,7 +401,7 @@ namespace Parser{
                 getFirst(mid.rules[j],canNone,first);
                 for(auto t:first){
                     if(mid.select.count(t)){
-                        cout<<"fucker "<<mid.sgn<<" "<<ends[t]<<endl;
+                        cout<<"Error Select generate "<<mid.sgn<<" "<<ends[t]<<endl;
                         return;
                     }
                     mid.select[t] = j;
@@ -412,20 +409,20 @@ namespace Parser{
                 if(canNone){
                     for(auto t:mid.follow){
                         if(mid.select.count(t)){
-                            cout<<"fucker "<<mid.sgn<<" "<<ends[t]<<endl;
+                            cout<<"Error Select generate "<<mid.sgn<<" "<<ends[t]<<endl;
                             return;
                         }
                         mid.select[t] = j;
                     }
                 }
             }
-            /*
+
             cout<<mid.sgn<<" -> ";
             for(auto &t:mid.select){
                 cout<<"("<<ends[t.first]<<","<<t.second<<")";
             }
             cout<<endl;
-             */
+
         }
     }
     int extend(Mid &mid,int treeNode,int &pos,vector<result> &lex){
@@ -441,6 +438,7 @@ namespace Parser{
             cerr<<"Error at Line "<<lineRec[pos]<<": can't select "<<lex[pos].type<<" from "<<mid.sgn<<endl;
             return -1;
         }
+
         Rule &rule = mid.rules[mid.select[endToId[lex[pos].type]]];
         for(auto &node:rule.rights){
             if(node.isEnd && node.id==endToId[lex[pos].type]){
@@ -455,7 +453,7 @@ namespace Parser{
                 int ret = extend(mids[node.id],(int)resultTree.size()-1,pos,lex);
                 if(ret==-1)return -1;
             }else{
-                ERROR(lineRec[pos],lex[pos].type,mid.sgn);
+                //ERROR(lineRec[pos],lex[pos].type,mid.sgn);
                 cerr<<"Error at Line "<<lineRec[pos]<<": wrong sign "<<lex[pos].type<<" from "<<mid.sgn<<endl;
             }
         }

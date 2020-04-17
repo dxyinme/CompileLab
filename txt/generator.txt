@@ -1,7 +1,7 @@
 program -> decls stmts $ #
 block -> { decls stmts } $ #
 decls -> decls decl $ none $ #
-decl -> type Variable ; $ def $ #
+decl -> type Variable ; $ def $ defrec $ #
 cal -> call Variable ( ) $ #
 type -> type [ Const ] $ basic $ #
 stmts -> stmts stmt $ none $ #
@@ -18,3 +18,4 @@ unary -> ! unary $ - unary $ factor $ #
 factor -> ( bool ) $ loc $ Const $ true $ false $ #
 basic -> int $ char $ double $ float $ #
 def -> function Variable ( ) block $ #
+defrec -> record Variable ; $ #

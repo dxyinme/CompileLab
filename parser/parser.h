@@ -212,13 +212,13 @@ namespace Parser{
         getFirstSet();
         getEndSet();
         getSelectSet();
-        /*for(int i = 0;i < mids.size();i++){
-            cout<<mids[i].sgn<<" -> ";
-            for(auto t:mids[i].follow){
-                cout<<ends[t]<<" ";
-            }
-            cout<<endl;
-        }*/
+        // for(int i = 0;i < mids.size();i++){
+        //     cout<<mids[i].sgn<<" -> ";
+        //     for(auto t:mids[i].follow){
+        //         cout<<ends[t]<<" ";
+        //     }
+        //     cout<<endl;
+        // }
         for(int i = 0;i < mids.size();i++){
             print(mids[i]);
         }
@@ -453,7 +453,7 @@ namespace Parser{
                 int ret = extend(mids[node.id],(int)resultTree.size()-1,pos,lex);
                 if(ret==-1)return -1;
             }else{
-                //ERROR(lineRec[pos],lex[pos].type,mid.sgn);
+                ERROR(lineRec[pos],lex[pos].type,mid.sgn);
                 cerr<<"Error at Line "<<lineRec[pos]<<": wrong sign "<<lex[pos].type<<" from "<<mid.sgn<<endl;
             }
         }

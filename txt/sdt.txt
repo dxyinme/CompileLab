@@ -67,9 +67,20 @@ loc -> <Variable> loc' |
 bool -> join bool' |
 join -> equality join' |
 equality -> rel equality' |
-rel -> expr rel4 |
+rel -> expr rel4 | 
+    rel -> expr rel4 {
+
+    }
 expr -> term expr' |
+    expr -> term expr' {
+        expr.addr = newtemp();
+        expr.code = term.code || expr'.code || gen(expr.add '=' term.add expr'.op expr.addr);
+    }
 term -> unary term' |
+    term -> unary term' {
+        term.addr = newtemp();
+        term.code = unary.code || term'.code || gen(term.addr = unary.addr term'.op term'.addr);
+    }
 unary -> <NOT> unary |<SUB> unary |factor |
     unary -> <NOT> unary1 {
         unary.addr = newtemp();
@@ -136,16 +147,73 @@ loc' -> <LAT> bool <RAT> loc' ||
     }
 bool' -> <OR> join bool' ||
 join' -> <AND> equality join' ||
-equality' -> <EQU> rel equality' |<NOTE> rel equality' ||
-expr' -> <INC> term expr' |<SUB> term expr' ||
 
-expr' -> <INC> term expr' {
-    
-}
+equality' -> <EQU> rel equality' |<NOTE> rel equality' ||
+
+expr' -> <INC> term expr' |<SUB> term expr' ||
+    expr' -> <INC> term expr'1 {
+        expr'.addr = newtemp();
+        expr'.code = term.code || expr'.code || gen(expr'.addr '=' term.addr expr'1.op expr'1.addr);
+        expr'.op = '+';
+    }
+
+    expr' -> <SUB> term expr'1 {
+        expr'addr = newtemp();
+        expr'.code = term.code || expr'.code || gen(expr'.addr '=' term.addr expr'1.op expr'1.addr);
+        expr'.op = '-';
+    }
 
 term' -> <MUL> unary term' |<DIV> unary term' ||
+    term' -> <MUL> unary term'1 {
+        term'.addr = newtemp();
+        term'.code = unary.code || term'1.code || gen(term'.addr '=' unary.addr term'1.op term'1.addr);
+        term'.op = '*';
+    }
+    term' -> <DIV> unary term'1 {
+        term'.addr = newtemp();
+        term'.code = unary.code || term'1.code || gen(term'.addr '=' unary.addr term'1.op term'1.addr);
+        term'.op = '/';
+    }
+    
 stmt1 -> |<ELSE> noelse |
+
 rel2 -> <L> expr |<LE> expr |<G> expr |
+    rel2 -> <L> expr {
+        rel2.addr = newtemp();
+        rel2.code = expr.code || gen(rel2.addr '=' expr.addr);
+        rel2.op = '<';
+    }
+    rel2 -> <LE> expr {
+        rel2.addr = newtemp();
+        rel2.code = expr.code || gen(rel2.addr '=' expr.addr);
+        rel2.op = '<=';
+    }
+    rel2 -> <G> expr {
+        rel2.addr = newtemp();
+        rel2.code = expr.code || gen(rel2.addr '=' expr.addr);
+        rel2.op = '>';
+    }
+
 rel3 -> rel2 |<GE> expr |
+    rel3 -> rel2 {
+        rel3.addr = newtemp();
+        rel3.code = rel2.code;
+        rel3.op = rel2.op;
+    }
+    rel3 -> <GE> expr {
+        rel3.addr = newtemp();
+        rel3.code = expr.code || gen(rel3.addr '=' expr.addr);
+        rel3.op = '>='
+    }
+
+
 rel4 -> rel3 ||
+    rel4 -> rel3 {
+        rel4.addr = newtemp();
+        rel4.empty = false;
+    }
+    rel4 -> || {
+        rel4.empty = newtemp();
+        rel4.empty = true;
+    }
 stmts'5 -> stmts' |<ELSE> noelse stmts' |

@@ -23,12 +23,9 @@ type -> basic type' |
     }
 def -> <FUNC> <Variable> <LPA> <RPA> block |
 
-
-
 defrec -> <RECORD> <Variable> <SEM> |
 
 cal -> <CALL> <Variable> <LPA> <RPA> |
-
 
 basic -> <INT> |<CHAR> |<LF> |<F> |
     basic -> <INT> {
@@ -66,10 +63,23 @@ loc -> <Variable> loc' |
     }
 bool -> join bool' |
 join -> equality join' |
+    join -> equality join' {
+        join.addr = newtemp();
+        join.code = expr.code || join'.code || gen(join.addr '=' equality.addr join'.op join'.addr);
+    }
+
 equality -> rel equality' |
+    equality -> rel equality' {
+        equality.addr = newtemp();
+        equality.code = rel.code || equality'.code || gen(equality.addr '=' rel.code equality'.op equality'.addr);
+    }
 rel -> expr rel4 | 
     rel -> expr rel4 {
-
+        rel.addr = newtemp();
+        if(rel4.empty == false) then 
+            rel.code = expr.code || rel4.code || gen(rel.addr '=' expr.addr rel4.op rel4.addr);
+        else then 
+            rel.code = expr.code || rel4.code || gen(rel.addr '=' expr.addr);
     }
 expr -> term expr' |
     expr -> term expr' {
@@ -123,6 +133,9 @@ factor -> <LPA> bool <RPA> |<Variable> loc' |<Const> |<TRUE> |<FALSE> |
 
 decls' -> <INT> type' <Variable> <SEM> decls' |<CHAR> type' <Variable> <SEM> decls' |<LF> type' <Variable> <SEM> decls' |<F> type' <Variable> <SEM> decls' |<FUNC> <Variable> <LPA> <RPA> block decls' |<RECORD> <Variable> <SEM> decls' ||
 stmts' -> <CALL> <Variable> <LPA> <RPA> <SEM> stmts' |<Variable> loc' <ASS> bool <SEM> stmts' |<IF> <LPA> bool <RPA> noelse stmts'5 |<WHL> <LPA> bool <RPA> stmt stmts' |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> stmts' |<BRK> <SEM> stmts' |<LBR> decls stmts <RBR> stmts' ||
+
+
+
 type' -> <LAT> <Const> <RAT> type' ||
     type' -> <LAT> <Const> <RAT> type'1 {
         if(<Const> != INT) then error
@@ -139,7 +152,7 @@ loc' -> <LAT> bool <RAT> loc' ||
         loc'.offset = newtemp();
         if(loc'1.offset == 0)then
             gen(loc'.offset '=' bool.addr '*' w)
-        else then
+        else
             gen(loc'.offset '=' loc'1.offset '*' bool.addr)
     }
     loc' -> || {
@@ -147,8 +160,23 @@ loc' -> <LAT> bool <RAT> loc' ||
     }
 bool' -> <OR> join bool' ||
 join' -> <AND> equality join' ||
-
+    join' -> <AND> equality join'1 {
+        join'.addr = newtemp();
+        join'.code = equality.code || join'1.code || gen(join'.addr '=' equality.addr join'1.op join'1.addr);
+        join'.op = '&';
+    }
 equality' -> <EQU> rel equality' |<NOTE> rel equality' ||
+    equality' -> <EQU> rel equality'1 {
+        equality'.addr = newtemp();
+        equality'.code = rel.code || equality'1.code || gen(equality'.addr '=' rel.addr equality'1.op equality'1.addr);
+        equality'.op = '==';
+    }
+    equality' -> <NOTE> rel equality'1 {
+        equality'.addr = newtemp();
+        equality'.code = rel.code || equality'1.code || gen(equality'.addr '=' rel.addr equality'1.op equality'1.addr);
+        equality'.op = '!=';
+    }
+
 
 expr' -> <INC> term expr' |<SUB> term expr' ||
     expr' -> <INC> term expr'1 {
@@ -211,9 +239,11 @@ rel4 -> rel3 ||
     rel4 -> rel3 {
         rel4.addr = newtemp();
         rel4.empty = false;
+        rel4.op = rel3.op;
+        rel4.code = rel3.code;
     }
     rel4 -> || {
-        rel4.empty = newtemp();
         rel4.empty = true;
     }
+
 stmts'5 -> stmts' |<ELSE> noelse stmts' |

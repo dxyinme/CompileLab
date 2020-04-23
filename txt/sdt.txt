@@ -1,0 +1,151 @@
+program -> decls stmts |
+    program -> {
+        offset = 0;
+    } decls stmts
+
+decls -> decls' |
+
+stmts -> stmts' |
+
+block -> <LBR> decls stmts <RBR> |
+
+decl -> type <Variable> <SEM> |def |defrec |
+   decl -> type <Variable> <SEM>  {
+       if(<Variable>.name is exist) then error;
+       enter (<Variable>.name , type.Type , offset);
+       offset += type.width;
+   }
+
+type -> basic type' |
+    type -> basic type' {
+        t = basic.Type;
+        w = basic.width;
+    }
+def -> <FUNC> <Variable> <LPA> <RPA> block |
+
+
+
+defrec -> <RECORD> <Variable> <SEM> |
+
+cal -> <CALL> <Variable> <LPA> <RPA> |
+
+
+basic -> <INT> |<CHAR> |<LF> |<F> |
+    basic -> <INT> {
+        basic.Type = int
+    }
+    basic -> <CHAR> {
+        basic.Type = char
+    }
+    basic -> <F> {
+        basic.Type = float
+    }
+    basic -> <LF> {
+        basic.Type = double
+    }
+stmt -> <CALL> <Variable> <LPA> <RPA> <SEM> |loc <ASS> bool <SEM> |<IF> <LPA> bool <RPA> noelse stmt1 |<WHL> <LPA> bool <RPA> stmt |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> |<BRK> <SEM> |<LBR> decls stmts <RBR> |
+    stmt -> loc <ASS> bool <SEM> {
+        p = lookup(loc);
+        if(p == nil) then error ;
+        stmt.code = bool.code || gen(p.addr "=" bool.addr);
+    }
+noelse -> <CALL> <Variable> <LPA> <RPA> <SEM> |loc <ASS> bool <SEM> |<IF> <LPA> bool <RPA> noelse |<WHL> <LPA> bool <RPA> noelse |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> |<BRK> <SEM> |<LBR> decls stmts <RBR> |
+    noelse -> loc <ASS> bool <SEM> {
+        p = lookup(loc);
+        if(p == nil) then error ;
+        noelse.code = bool.code || gen(p.addr "=" bool.addr);
+    }
+loc -> <Variable> loc' |
+    loc -> <Variable> loc' {
+        loc.array = lookup(<Variable>.name);
+        if(loc.array == nil) then error;
+        loc.Type = loc.array.type.elem;
+        loc.offset = newtemp();
+        w = loc.Type.width;
+        gen(loc.offset '=' loc'.offset '*' w)
+    }
+bool -> join bool' |
+join -> equality join' |
+equality -> rel equality' |
+rel -> expr rel4 |
+expr -> term expr' |
+term -> unary term' |
+unary -> <NOT> unary |<SUB> unary |factor |
+    unary -> <NOT> unary1 {
+        unary.addr = newtemp();
+        unary.code = unary1.code || gen(unary.addr '=' '!' unary1.addr);
+    }
+    unary -> <SUB> unary1 {
+        unary.addr = newtemp();
+        unary.code = unary1.code || gen(unary.addr '=' '-' unary1.addr);
+    }
+    unary -> factor {
+        unary.addr = newtemp();
+        unary.code = factor.code || gen(unary.addr '=' factor.code);
+    }
+factor -> <LPA> bool <RPA> |<Variable> loc' |<Const> |<TRUE> |<FALSE> | 
+    factor -> <LPA> bool <RPA> {
+        factor.addr = bool.addr;
+        factor.code = bool.code;
+    }
+    factor -> <Variable> loc' {
+        array = lookup(<Variable>.name);
+        if(array == nil) then error;
+        Type = loc.array.type.elem;
+        addr = newtemp();
+        w = Type.width;
+        factor.code = gen(addr '=' loc'.addr '*' w)
+        factor.addr = addr;
+    }
+    factor -> <Const> {
+        factor.addr = newtemp();
+        factor.code = gen(factor.addr '=' <Const>.val);
+    }
+    factor -> <TRUE> {
+        factor.addr = newtemp();
+        factor.code = gen(factor.addr '=' <Const>.val);
+    }
+    factor -> <FALSE> {
+        factor.addr = newtemp();
+        factor.code = gen(factor.addr '=' <FALSE>.val);
+    }
+
+decls' -> <INT> type' <Variable> <SEM> decls' |<CHAR> type' <Variable> <SEM> decls' |<LF> type' <Variable> <SEM> decls' |<F> type' <Variable> <SEM> decls' |<FUNC> <Variable> <LPA> <RPA> block decls' |<RECORD> <Variable> <SEM> decls' ||
+stmts' -> <CALL> <Variable> <LPA> <RPA> <SEM> stmts' |<Variable> loc' <ASS> bool <SEM> stmts' |<IF> <LPA> bool <RPA> noelse stmts'5 |<WHL> <LPA> bool <RPA> stmt stmts' |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> stmts' |<BRK> <SEM> stmts' |<LBR> decls stmts <RBR> stmts' ||
+type' -> <LAT> <Const> <RAT> type' ||
+    type' -> <LAT> <Const> <RAT> type'1 {
+        if(<Const> != INT) then error
+        type'.Type = array(<Const>,type'1.Type)
+        type'.Width = type'1.Width * <Const>.val
+    }
+    type' -> || {
+        type'.Type = t;
+        type'.width = w;
+    }
+
+loc' -> <LAT> bool <RAT> loc' ||
+    loc' -> <LAT> bool <RAT> loc'1 {
+        loc'.offset = newtemp();
+        if(loc'1.offset == 0)then
+            gen(loc'.offset '=' bool.addr '*' w)
+        else then
+            gen(loc'.offset '=' loc'1.offset '*' bool.addr)
+    }
+    loc' -> || {
+        loc'.offset = 0;
+    }
+bool' -> <OR> join bool' ||
+join' -> <AND> equality join' ||
+equality' -> <EQU> rel equality' |<NOTE> rel equality' ||
+expr' -> <INC> term expr' |<SUB> term expr' ||
+
+expr' -> <INC> term expr' {
+    
+}
+
+term' -> <MUL> unary term' |<DIV> unary term' ||
+stmt1 -> |<ELSE> noelse |
+rel2 -> <L> expr |<LE> expr |<G> expr |
+rel3 -> rel2 |<GE> expr |
+rel4 -> rel3 ||
+stmts'5 -> stmts' |<ELSE> noelse stmts' |

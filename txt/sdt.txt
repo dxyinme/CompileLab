@@ -1,0 +1,443 @@
+program -> decls stmts |
+    program -> {
+        offset = 0;
+        offset = 0;
+    } decls stmts
+
+decls -> decls' |
+    
+stmts -> stmts' |
+
+block -> <LBR> decls stmts <RBR> |
+    block -> <LBR> decls stmts <RBR> {
+        block.label = newlabel();
+    }<LBR> decls stmts <RBR>
+
+decl -> type <Variable> <SEM> |def |defrec |
+   decl -> type <Variable> <SEM>  {
+       if(<Variable>.name is exist) then error;
+       enter (<Variable>.name , type.Type , offset);
+       offset += type.width;
+   }
+
+type -> basic type' |
+    type -> basic type' {
+        t = basic.Type;
+        w = basic.width;
+    }
+def -> <FUNC> <Variable> <LPA> <RPA> block |
+    def -> <FUNC> <Variable> <LPA> <RPA>  {
+        def.addr = block.label;
+        def.code = block.code;
+        enterFUNC (<Variable>.name , offsetFUNC);
+        offset += temp;
+    } block
+
+
+defrec -> <RECORD> <Variable> <SEM> |
+    defrec -> <RECORD> <Variable> <SEM> {
+        if(<Variable>.name is exist) then error;
+        enter (<Variable>.name , <RECORD> , offset);
+        offset += <RECORD>.width;
+    }
+
+cal -> <CALL> <Variable> <LPA> <RPA> |
+
+    cal -> <CALL> <Variable> <LPA> <RPA> {
+        p = lookupFUNC(<Variable>.val);
+        if(p == nil) then error;
+        gen('goto' p.addr);
+    }
+
+basic -> <INT> |<CHAR> |<LF> |<F> |
+    basic -> <INT> {
+        basic.Type = int
+    }
+    basic -> <CHAR> {
+        basic.Type = char
+    }
+    basic -> <F> {
+        basic.Type = float
+    }
+    basic -> <LF> {
+        basic.Type = double
+    }
+stmt -> <CALL> <Variable> <LPA> <RPA> <SEM> |loc <ASS> bool <SEM> |<IF> <LPA> bool <RPA> noelse stmt1 |<WHL> <LPA> bool <RPA> stmt |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> |<BRK> <SEM> |<LBR> decls stmts <RBR> |
+    stmt -> <CALL> <Variable> <LPA> <RPA> <SEM>{
+        p = lookupFUNC(<Variable>.name);
+        stmt.code = p.code;
+    }
+    stmt -> loc <ASS> bool <SEM> {
+        p = lookup(loc);
+        if(p == nil) then error ;
+        stmt.code = bool.code || gen(p.addr "=" bool.addr);
+    }
+    stmt -> <IF> {
+        bool.true = newlabel();
+        bool.false = stmt.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        noelse.next = stmt.next;
+    } noelse { gen('goto' stmt.next); } stmt1 {
+        label(bool.false);
+        stmt1.next = stmt.next;
+    }
+    stmt -> <WHL> {
+        stmt.begin = newlabel();
+        label(stmt.begin);
+        bool.true = newlabel();
+        bool.false = stmt.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        stmt0.next = stmt.next;
+    } stmt0
+
+    stmt -> <DO> {
+        stmt.begin = newlabel();
+        label(stmt.begin);
+    } stmt0 {
+        stmt0.next = stmt.next;
+    } <WHL> <LPA> bool {
+        bool.true = newlabel();
+        bool.false = stmt.next;
+        gen('goto' , stmt.begin);
+    }<RPA> <SEM>
+
+    stmt -> <BRK> <SEM> {
+        gen('goto' stmt.next);
+    }
+
+noelse -> <CALL> <Variable> <LPA> <RPA> <SEM> |loc <ASS> bool <SEM> |<IF> <LPA> bool <RPA> noelse |<WHL> <LPA> bool <RPA> noelse |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> |<BRK> <SEM> |<LBR> decls stmts <RBR> |
+    
+    noelse -> <CALL> <Variable> <LPA> <RPA> <SEM>{
+        p = lookupFUNC(<Variable>.name);
+        stmt.code = p.code;
+    }
+    noelse -> loc <ASS> bool <SEM> {
+        p = lookup(loc);
+        if(p == nil) then error ;
+        noelse.code = bool.code || gen(p.addr "=" bool.addr);
+    }
+    noelse -> <IF> {
+        bool.true = newlabel();
+        bool.false = noelse.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        noelse1.next = noelse.next;
+    } { gen('goto' noelse.next); } noelse1
+
+    noelse -> <WHL> {
+        noelse.begin = newlabel();
+        label(noelse.begin);
+        bool.true = newlabel();
+        bool.false = noelse.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        noelse1.next = noelse.next;
+    } noelse1
+
+    noelse -> <DO> {
+        stmt.begin = newlabel();
+        label(stmt.begin);
+    } noelse1 {
+        noelse1.next = noelse.next;
+    } <WHL> <LPA> bool {
+        bool.true = newlabel();
+        bool.false = noelse.next;
+        gen('goto' , noelse.begin);
+    }<RPA> <SEM>
+
+    noelse -> <BRK> <SEM> {
+        gen('goto' noelse.next);
+    }
+
+loc -> <Variable> loc' |
+    loc -> <Variable> loc' {
+        loc.array = lookup(<Variable>.name);
+        if(loc.array == nil) then error;
+        loc.Type = loc.array.type.elem;
+        loc.offset = newtemp();
+        w = loc.Type.width;
+        loc.code = loc'.code || gen(loc.offset '=' loc'.offset '*' w)
+    }
+bool -> join bool' |
+    bool -> join bool' {
+        bool.addr = newtemp();
+        bool.code = join.code || bool'.code || gen(bool.addr '=' join.addr bool'.op bool'.addr)
+    }
+
+join -> equality join' |
+    join -> equality join' {
+        join.addr = newtemp();
+        join.code = expr.code || join'.code || gen(join.addr '=' equality.addr join'.op join'.addr);
+    }
+
+equality -> rel equality' |
+    equality -> rel equality' {
+        equality.addr = newtemp();
+        equality.code = rel.code || equality'.code || gen(equality.addr '=' rel.code equality'.op equality'.addr);
+    }
+rel -> expr rel4 | 
+    rel -> expr rel4 {
+        rel.addr = newtemp();
+        if(rel4.empty == false) then 
+            rel.code = expr.code || rel4.code || gen(rel.addr '=' expr.addr rel4.op rel4.addr);
+        else then 
+            rel.code = expr.code || rel4.code || gen(rel.addr '=' expr.addr);
+    }
+expr -> term expr' |
+    expr -> term expr' {
+        expr.addr = newtemp();
+        expr.code = term.code || expr'.code || gen(expr.add '=' term.add expr'.op expr.addr);
+    }
+term -> unary term' |
+    term -> unary term' {
+        term.addr = newtemp();
+        term.code = unary.code || term'.code || gen(term.addr = unary.addr term'.op term'.addr);
+    }
+unary -> <NOT> unary |<SUB> unary |factor |
+    unary -> <NOT> unary1 {
+        unary.addr = newtemp();
+        unary.code = unary1.code || gen(unary.addr '=' '!' unary1.addr);
+    }
+    unary -> <SUB> unary1 {
+        unary.addr = newtemp();
+        unary.code = unary1.code || gen(unary.addr '=' '-' unary1.addr);
+    }
+    unary -> factor {
+        unary.addr = newtemp();
+        unary.code = factor.code || gen(unary.addr '=' factor.code);
+    }
+factor -> <LPA> bool <RPA> |<Variable> loc' |<Const> |<TRUE> |<FALSE> | 
+    factor -> <LPA> bool <RPA> {
+        factor.addr = bool.addr;
+        factor.code = bool.code;
+    }
+    factor -> <Variable> loc' {
+        array = lookup(<Variable>.name);
+        if(array == nil) then error;
+        Type = loc.array.type.elem;
+        addr = newtemp();
+        w = Type.width;
+        factor.code = gen(addr '=' loc'.addr '*' w)
+        factor.addr = addr;
+    }
+    factor -> <Const> {
+        factor.addr = newtemp();
+        factor.code = gen(factor.addr '=' <Const>.val);
+    }
+    factor -> <TRUE> {
+        factor.addr = newtemp();
+        factor.code = gen(factor.addr '=' <Const>.val);
+    }
+    factor -> <FALSE> {
+        factor.addr = newtemp();
+        factor.code = gen(factor.addr '=' <FALSE>.val);
+    }
+
+decls' -> <INT> type' <Variable> <SEM> decls' |<CHAR> type' <Variable> <SEM> decls' |<LF> type' <Variable> <SEM> decls' |<F> type' <Variable> <SEM> decls' |<FUNC> <Variable> <LPA> <RPA> block decls' |<RECORD> <Variable> <SEM> decls' ||
+    decls' -> <INT> type' <Variable> <SEM> {
+        if(<Variable>.name is exist) then error;
+        enter (<Variable>.name , type'.width , offset);
+        offset += type.width;
+    } decls'
+    decls' -> <CHAR> type' <Variable> <SEM> {
+        if(<Variable>.name is exist) then error;
+        enter (<Variable>.name , type'.width , offset);
+        offset += type.width;
+    } decls'
+    decls' -> <LF> type' <Variable> <SEM> {
+        if(<Variable>.name is exist) then error;
+        enter (<Variable>.name , type'.width , offset);
+        offset += type.width;
+    } decls'
+    decls' -> <F> type' <Variable> <SEM> {
+        if(<Variable>.name is exist) then error;
+        enter (<Variable>.name , type'.width , offset);
+        offset += type.width;
+    } decls'
+    decls' -> <FUNC> type' <Variable> <SEM> {
+        def.addr = newlabel();
+        enterFUNC (<Variable>.name , offsetFUNC);
+        offset += temp;
+    } decls'
+    decls' -> <RECORD> type' <Variable> <SEM> {
+        if(<Variable>.name is exist) then error;
+        enter (<Variable>.name , <RECORD> , offset);
+        offset += <RECORD>.width;
+    } decls'
+
+stmts' -> <CALL> <Variable> <LPA> <RPA> <SEM> stmts' |<Variable> loc' <ASS> bool <SEM> stmts' |<IF> <LPA> bool <RPA> noelse stmts'5 |<WHL> <LPA> bool <RPA> stmt stmts' |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> stmts' |<BRK> <SEM> stmts' |<LBR> decls stmts <RBR> stmts' ||
+    stmts' -> <CALL> <Variable> <LPA> <RPA> <SEM>{
+        p = lookupFUNC(<Variable>.name);
+        stmts'.code = p.code;
+    } stmts'
+    stmts' -> <Variable> loc' <ASS> bool <SEM> {
+        p = lookup(<Variable>.name);
+        if(p == nil) then error ;
+        p += loc'.offset;
+        stmts'.code = bool.code || gen(p.addr "=" bool.addr);
+    } stmts'1
+    stmts' -> <IF> {
+        bool.true = newlabel();
+        bool.false = stmts'.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        noelse.next = stmts'.next;
+    } noelse { gen('goto' stmts'.next); } stmts'5 {
+        label(bool.false);
+        stmts'5.next = stmts'.next;
+    }
+    stmts' -> <WHL> {
+        stmts'.begin = newlabel();
+        label(stmts'.begin);
+        bool.true = newlabel();
+        bool.false = stmts'.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        stmt.next = stmts'.next;
+    } stmt stmts'1
+
+    stmts' -> <DO> {
+        stmt.begin = newlabel();
+        label(stmts'.begin);
+    } stmt {
+        stmt.next = stmts'.next;
+    } <WHL> <LPA> bool {
+        bool.true = newlabel();
+        bool.false = stmts'.next;
+        gen('goto' , stmts'.begin);
+    }<RPA> <SEM> stmts'
+
+    stmts' -> <BRK> <SEM> {
+        gen('goto' stmts'.next);
+    } stmts' 
+
+type' -> <LAT> <Const> <RAT> type' ||
+    type' -> <LAT> <Const> <RAT> type'1 {
+        if(<Const> != INT) then error
+        type'.Type = array(<Const>,type'1.Type)
+        type'.Width = type'1.Width * <Const>.val
+    }
+    type' -> || {
+        type'.Type = t;
+        type'.width = w;
+    }
+
+loc' -> <LAT> bool <RAT> loc' ||
+    loc' -> <LAT> bool <RAT> loc'1 {
+        loc'.offset = newtemp();
+        if(loc'1.offset == 0)then
+            gen(loc'.offset '=' bool.addr '*' w)
+        else
+            gen(loc'.offset '=' loc'1.offset '*' bool.addr)
+    }
+    loc' -> || {
+        loc'.offset = 0;
+    }
+
+bool' -> <OR> join bool' ||
+    bool' -> <OR> join bool'1 {
+        bool'.addr = newtemp();
+        if(bool'1.empty == true) then begin 
+            bool'.op = '|';
+            bool'.code = join.code || gen(bool'.addr '=' join.addr);
+        end; 
+        else begin 
+            bool'.op = '|';
+            bool'.code = join.code || bool'1.code ||gen(bool'.addr '=' join.addr bool'1.op bbol'1.addr);
+        end;
+    }
+    bool' -> || {
+        bool'.empty = true;
+    }
+
+
+join' -> <AND> equality join' ||
+    join' -> <AND> equality join'1 {
+        join'.addr = newtemp();
+        join'.code = equality.code || join'1.code || gen(join'.addr '=' equality.addr join'1.op join'1.addr);
+        join'.op = '&';
+    }
+equality' -> <EQU> rel equality' |<NOTE> rel equality' ||
+    equality' -> <EQU> rel equality'1 {
+        equality'.addr = newtemp();
+        equality'.code = rel.code || equality'1.code || gen(equality'.addr '=' rel.addr equality'1.op equality'1.addr);
+        equality'.op = '==';
+    }
+    equality' -> <NOTE> rel equality'1 {
+        equality'.addr = newtemp();
+        equality'.code = rel.code || equality'1.code || gen(equality'.addr '=' rel.addr equality'1.op equality'1.addr);
+        equality'.op = '!=';
+    }
+
+
+expr' -> <INC> term expr' |<SUB> term expr' ||
+    expr' -> <INC> term expr'1 {
+        expr'.addr = newtemp();
+        expr'.code = term.code || expr'.code || gen(expr'.addr '=' term.addr expr'1.op expr'1.addr);
+        expr'.op = '+';
+    }
+
+    expr' -> <SUB> term expr'1 {
+        expr'addr = newtemp();
+        expr'.code = term.code || expr'.code || gen(expr'.addr '=' term.addr expr'1.op expr'1.addr);
+        expr'.op = '-';
+    }
+
+term' -> <MUL> unary term' |<DIV> unary term' ||
+    term' -> <MUL> unary term'1 {
+        term'.addr = newtemp();
+        term'.code = unary.code || term'1.code || gen(term'.addr '=' unary.addr term'1.op term'1.addr);
+        term'.op = '*';
+    }
+    term' -> <DIV> unary term'1 {
+        term'.addr = newtemp();
+        term'.code = unary.code || term'1.code || gen(term'.addr '=' unary.addr term'1.op term'1.addr);
+        term'.op = '/';
+    }
+    
+stmt1 -> |<ELSE> noelse |
+
+rel2 -> <L> expr |<LE> expr |<G> expr |
+    rel2 -> <L> expr {
+        rel2.addr = newtemp();
+        rel2.code = expr.code || gen(rel2.addr '=' expr.addr);
+        rel2.op = '<';
+    }
+    rel2 -> <LE> expr {
+        rel2.addr = newtemp();
+        rel2.code = expr.code || gen(rel2.addr '=' expr.addr);
+        rel2.op = '<=';
+    }
+    rel2 -> <G> expr {
+        rel2.addr = newtemp();
+        rel2.code = expr.code || gen(rel2.addr '=' expr.addr);
+        rel2.op = '>';
+    }
+
+rel3 -> rel2 |<GE> expr |
+    rel3 -> rel2 {
+        rel3.addr = newtemp();
+        rel3.code = rel2.code;
+        rel3.op = rel2.op;
+    }
+    rel3 -> <GE> expr {
+        rel3.addr = newtemp();
+        rel3.code = expr.code || gen(rel3.addr '=' expr.addr);
+        rel3.op = '>='
+    }
+
+
+rel4 -> rel3 ||
+    rel4 -> rel3 {
+        rel4.addr = newtemp();
+        rel4.empty = false;
+        rel4.op = rel3.op;
+        rel4.code = rel3.code;
+    }
+    rel4 -> || {
+        rel4.empty = true;
+    }
+
+stmts'5 -> stmts' |<ELSE> noelse stmts' |

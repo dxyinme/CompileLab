@@ -5,7 +5,9 @@ program -> decls stmts |
     } decls stmts
 
 decls -> decls' |
-    
+    decls -> decls'{
+        decls.width = decls
+    }
 stmts -> stmts' |
 
 block -> <LBR> decls stmts <RBR> |
@@ -35,11 +37,10 @@ def -> <FUNC> <Variable> <LPA> <RPA> block |
     } 
 
 
-defrec -> <RECORD> <Variable> <SEM> |
-    defrec -> <RECORD> <Variable> <SEM> {
+defrec -> <RECORD> <Variable> <LBR> decls <RBR> |
+    defrec -> <RECORD> <Variable> <LBR> decls <RBR> {
         if(<Variable>.name is exist) then error;
-        enter (<Variable>.name , <RECORD> , offset);
-        offset += <RECORD>.width;
+        enter (<Variable>.name , delcs.width , offset);
     }
 
 cal -> <CALL> <Variable> <LPA> <RPA> |
@@ -240,33 +241,45 @@ decls' -> <INT> type' <Variable> <SEM> decls' |<CHAR> type' <Variable> <SEM> dec
     decls' -> <INT> type' <Variable> <SEM> {
         if(<Variable>.name is exist) then error;
         enter (<Variable>.name , type'.width , offset);
-        offset += type.width;
-    } decls'
+        offset += type'.width;
+        decls.width = type.width;
+        decls.width += decls'1.width;
+    } decls'1
     decls' -> <CHAR> type' <Variable> <SEM> {
         if(<Variable>.name is exist) then error;
         enter (<Variable>.name , type'.width , offset);
-        offset += type.width;
-    } decls'
+        offset += type'.width;
+        decls.width = type'.width;
+        decls.width += decls'1.width;
+    } decls'1
     decls' -> <LF> type' <Variable> <SEM> {
         if(<Variable>.name is exist) then error;
         enter (<Variable>.name , type'.width , offset);
-        offset += type.width;
-    } decls'
+        offset += type'.width;
+        decls.width = type'.width;
+        decls.width += decls'1.width;
+    } decls'1
     decls' -> <F> type' <Variable> <SEM> {
         if(<Variable>.name is exist) then error;
         enter (<Variable>.name , type'.width , offset);
-        offset += type.width;
-    } decls'
+        offset += type'.width;
+        decls.width = type'.width;
+        decls.width += decls'1.width;
+    } decls'1
     decls' -> <FUNC> type' <Variable> <SEM> {
         def.addr = newlabel();
         enterFUNC (<Variable>.name , offsetFUNC);
         offset += temp;
-    } decls'
+        decls.width = type'.width;
+        decls.width += decls'1.width;
+    } decls'1
     decls' -> <RECORD> type' <Variable> <SEM> {
         if(<Variable>.name is exist) then error;
         enter (<Variable>.name , <RECORD> , offset);
         offset += <RECORD>.width;
-    } decls'
+        decls.width = type'.width;
+        decls.width += decls'1.width;
+    } decls'1
 
 stmts' -> <CALL> <Variable> <LPA> <RPA> <SEM> stmts' |<Variable> loc' <ASS> bool <SEM> stmts' |<IF> <LPA> bool <RPA> noelse stmts'5 |<WHL> <LPA> bool <RPA> stmt stmts' |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> stmts' |<BRK> <SEM> stmts' |<LBR> decls stmts <RBR> stmts' ||
     stmts' -> <CALL> <Variable> <LPA> <RPA> <SEM>{

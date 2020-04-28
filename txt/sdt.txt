@@ -11,7 +11,8 @@ stmts -> stmts' |
 block -> <LBR> decls stmts <RBR> |
     block -> <LBR> decls stmts <RBR> {
         block.label = newlabel();
-    }<LBR> decls stmts <RBR>
+        block.code = decls.code || stmt.code;
+    }
 
 decl -> type <Variable> <SEM> |def |defrec |
    decl -> type <Variable> <SEM>  {
@@ -26,12 +27,12 @@ type -> basic type' |
         w = basic.width;
     }
 def -> <FUNC> <Variable> <LPA> <RPA> block |
-    def -> <FUNC> <Variable> <LPA> <RPA>  {
+    def -> <FUNC> <Variable> <LPA> <RPA> block {
         def.addr = block.label;
         def.code = block.code;
         enterFUNC (<Variable>.name , offsetFUNC);
         offset += temp;
-    } block
+    } 
 
 
 defrec -> <RECORD> <Variable> <SEM> |

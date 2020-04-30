@@ -785,6 +785,7 @@ namespace SDT {
                 for(auto t:(*bool_1->list)){
                     writeLabel(t);
                 }
+                delete bool_1->list;
                 noelse_1->gotoNext = gotoNext;
                 noelse_1->gotoBegin = newLabel();
                 noelse_1->dfs(SON(4));
@@ -877,6 +878,7 @@ namespace SDT {
             for(auto t:(*bool_1->list)){
                 writeLabel(t);
             }
+            delete bool_1->list;
             noelse_1->gotoNext = gotoNext;
             noelse_1->gotoBegin = newLabel();
             noelse_1->dfs(SON(4));
@@ -977,6 +979,7 @@ namespace SDT {
                 for(auto t:(*bool_1->list)){
                     writeLabel(t);
                 }
+                delete bool_1->list;
                 noelse_1->gotoNext = gotoNext;
                 noelse_1->dfs(SON(4));
                 stmtsP5_1->gotoBegin = newLabel();

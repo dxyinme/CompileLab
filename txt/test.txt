@@ -1,19 +1,28 @@
-function p(){x=1;}
-int x = 1;
-int z ;
-record recc ;
-int[50][32] y ;
-x = 10;
-z = 3;
-x = 5 + 4 * 2 - z;
-y[5][3] = 7 ;
-y[3][1] = x + y[5][z] ;
-call p();
-do{
-    x = x + 1;
-}while(x <= 5);
-if(x + y[1][1] <= 5 - z) {
-    x = 13;
-}else{
-    x = 55;
+int x;
+char[10][20][30] a;
+record b{
+    float hyf;
+    double fyh;
+    int[5][6] testArray;
 }
+function y(){
+    int z;
+    char p;
+    z = 3;
+    p = 4;
+}
+a[2][3][4] = 1+2*3/4*(5+6);
+if(2&&1<3&&2<4||3<4||5<6&&8<9){
+    x=1;
+}else{
+    x=2;
+}
+do{
+    x=3;
+}while(x==4);
+while(x!=5){
+    x=6;
+}
+x=222;
+call y(1+2,3+4);
+call y(6*7);

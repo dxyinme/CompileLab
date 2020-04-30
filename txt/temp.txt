@@ -1,0 +1,43 @@
+program -> decls stmts |
+decls -> decls' |
+stmts -> stmts' |
+block -> <LBR> decls stmts <RBR> |
+decl -> type <Variable> <SEM> |def |defrec |
+type -> basic type' |
+def -> <FUNC> <Variable> <LPA> <RPA> block |
+defrec -> <RECORD> <Variable> <LBR> decls <RBR> |
+cal -> <CALL> <Variable> <LPA> Elist <RPA> |
+Elist -> bool Elist' |Elist' |
+basic -> <INT> |<CHAR> |<LF> |<F> |
+stmt -> <CALL> <Variable> <LPA> Elist <RPA> <SEM> |loc <ASS> bool <SEM> |<IF> <LPA> bool <RPA> noelse stmt1 |<WHL> <LPA>
+ bool <RPA> stmt |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> |<BRK> <SEM> |<LBR> decls stmts <RBR> |
+noelse -> <CALL> <Variable> <LPA> Elist <RPA> <SEM> |loc <ASS> bool <SEM> |<IF> <LPA> bool <RPA> noelse |<WHL> <LPA> boo
+l <RPA> noelse |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> |<BRK> <SEM> |<LBR> decls stmts <RBR> |
+loc -> <Variable> loc' |
+bool -> join bool' |
+join -> equality join' |
+equality -> rel equality' |
+rel -> expr rel4 |
+expr -> term expr' |
+term -> unary term' |
+unary -> <NOT> unary |<SUB> unary |factor |
+factor -> <LPA> bool <RPA> |<Variable> loc' |<Const> |<TRUE> |<FALSE> |
+decls' -> <INT> type' <Variable> <SEM> decls' |<CHAR> type' <Variable> <SEM> decls' |<LF> type' <Variable> <SEM> decls'
+|<F> type' <Variable> <SEM> decls' |<FUNC> <Variable> <LPA> <RPA> block decls' |<RECORD> <Variable> <LBR> decls <RBR> de
+cls' ||
+stmts' -> <CALL> <Variable> <LPA> Elist <RPA> <SEM> stmts' |<Variable> loc' <ASS> bool <SEM> stmts' |<IF> <LPA> bool <RP
+A> noelse stmts'5 |<WHL> <LPA> bool <RPA> stmt stmts' |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> stmts' |<BRK> <SEM> stmts'
+ |<LBR> decls stmts <RBR> stmts' ||
+type' -> <LAT> <Const> <RAT> type' ||
+Elist' -> <DH> bool Elist' ||
+loc' -> <LAT> bool <RAT> loc' ||
+bool' -> <OR> join bool' ||
+join' -> <AND> equality join' ||
+equality' -> <EQU> rel equality' |<NOTE> rel equality' ||
+expr' -> <INC> term expr' |<SUB> term expr' ||
+term' -> <MUL> unary term' |<DIV> unary term' ||
+stmt1 -> |<ELSE> noelse |
+rel2 -> <L> expr |<LE> expr |<G> expr |
+rel3 -> rel2 |<GE> expr |
+rel4 -> rel3 ||
+stmts'5 -> stmts' |<ELSE> noelse stmts' |

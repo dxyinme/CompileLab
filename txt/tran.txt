@@ -1,4 +1,4 @@
-52
+54
 int INT
 char CHAR
 double LF
@@ -43,6 +43,7 @@ do DO
 ? ASK
 | BOR
 || OR
+, DH
 true TRUE
 false FALSE
 break BRK
@@ -51,3 +52,4 @@ Variable Variable
 Const Const
 call CALL
 function FUNC
+record RECORD

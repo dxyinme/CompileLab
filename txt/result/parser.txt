@@ -1,0 +1,1 @@
+Error at Line 1: can't select ASS from decls'

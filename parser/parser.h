@@ -4,6 +4,7 @@
 #include <map>
 #include <sstream>
 #include <fstream>
+#include "sdtFunc.h"
 using namespace std;
 namespace Parser{
     bool debug=false;
@@ -103,15 +104,8 @@ namespace Parser{
     // token 所在的行号
     vector<int> lineRec;
 
-    struct TreeNode{
-        vector<int> sons;
-        string name,attr;
-        int lineNum;
-        bool hide=false;
-        TreeNode(){}
-        TreeNode(int _n,string _name,string _attr):lineNum(_n),name(_name),attr(_attr){}
-    };
-    vector<TreeNode> resultTree(1);
+
+
     void print(const Rule &rule){
         for(auto &t:rule.rights){
             if(t.isEnd) cout<<"<"<<ends[t.id]<<"> ";
@@ -134,7 +128,7 @@ namespace Parser{
         if(treeNode.attr!="_"&&treeNode.attr!=" "){
             cout<<" :"<<treeNode.attr;
         }
-        cout<<"("<<treeNode.lineNum<<")"<<endl;
+        cout<<"("<<treeNode.lineNum<<","<<treeNode.opt<<")"<<endl;
         for(int t:treeNode.sons){
             print(resultTree[t],deep+1);
         }
@@ -440,6 +434,7 @@ namespace Parser{
         }
 
         Rule &rule = mid.rules[mid.select[endToId[lex[pos].type]]];
+        resultTree[treeNode].opt = mid.select[endToId[lex[pos].type]];
         for(auto &node:rule.rights){
             if(node.isEnd && node.id==endToId[lex[pos].type]){
                 resultTree.emplace_back(lineRec[pos],lex[pos].type,lex[pos].value);
@@ -480,8 +475,9 @@ namespace Parser{
         resultTree[0].name = mids[0].sgn;
         resultTree[0].attr = "_";
         int pos = 0;
+        if(!lineRec.empty())lineRec.push_back(lineRec[lineRec.size()-1]);
         if(extend(mids[0],0,pos,lex)==-1)return;
-        for(int i = 0;i < resultTree.size();i++) eliHide(resultTree[i]);
+        //for(int i = 0;i < resultTree.size();i++) eliHide(resultTree[i]);
         // print(resultTree[0],1);
     }
 
@@ -495,6 +491,47 @@ namespace Parser{
             for(auto s : errVec){
                 cout << s << endl;
             }
+        }
+        SDT::SDTNode *sdtroot = new SDT::Program;
+        sdtroot->dfs(resultTree[0], nullptr);
+        for(auto &t:SDT::vars){
+            cout<<"variable "<<t.first<<" : type->"<<t.second.first<<" offset->"<<t.second.second<<" width->"<<SDT::varwidth[t.first]<<endl;
+        }
+        for(auto &t:SDT::funcs){
+            cout<<"function "<<t.first<<" offset "<<t.second<<endl;
+        }
+        int lm = -1;
+        for(auto &t:SDT::codes){
+            lm++;if(lm==0)continue;
+            cout<<"line "<<lm<<":("<<t.op<<","<<t.t1<<","<<t.t2<<","<<t.res<<")";
+            if(t.op=="j<"){
+                cout<<"        if "<<t.t1<<"<"<<t.t2<<" goto "<<SDT::tempLabel[-atoi(t.res.c_str())];
+            }else if(t.op=="j<=") {
+                cout<<"        if "<<t.t1<<"<="<<t.t2<<" goto "<<SDT::tempLabel[-atoi(t.res.c_str())];
+            }else if(t.op=="j>") {
+                cout<<"        if "<<t.t1<<">"<<t.t2<<" goto "<<SDT::tempLabel[-atoi(t.res.c_str())];
+            }else if(t.op=="j>=") {
+                cout<<"        if "<<t.t1<<">="<<t.t2<<" goto "<<SDT::tempLabel[-atoi(t.res.c_str())];
+            }else if(t.op=="je") {
+                cout<<"        if "<<t.t1<<"=="<<t.t2<<" goto "<<SDT::tempLabel[-atoi(t.res.c_str())];
+            }else if(t.op=="jne") {
+                cout<<"        if "<<t.t1<<"!="<<t.t2<<" goto "<<SDT::tempLabel[-atoi(t.res.c_str())];
+            }else if(t.op=="jnz") {
+                cout<<"        if "<<t.t1<<" not bitwise-zero"<<" goto "<<SDT::tempLabel[-atoi(t.res.c_str())];
+            }else if(t.op=="j"){
+                cout<<"         goto "<<SDT::tempLabel[-atoi(t.res.c_str())];
+            }else if(t.op=="="){
+                cout<<"         "<<t.res<<"="<<t.t1;
+            }else if(t.op=="ret"){
+                cout<<"         "<<"return";
+            }else if(t.op=="*"||t.op=="/"||t.op=="+"||t.op=="-"){
+                cout<<"         "<<t.res<<"="<<t.t1<<t.op<<t.t2;
+            }else if(t.op=="param"){
+                cout<<"         "<<"param "<<t.res;
+            }else if(t.op=="call"){
+                cout<<"         "<<"call function "<<t.res<<"(with "<<t.t1<<" params,goto "<<SDT::funcs[t.res]<<")";
+            }
+            cout<<endl;
         }
         fclose(stdout);
     }

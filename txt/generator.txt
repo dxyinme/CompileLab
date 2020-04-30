@@ -2,7 +2,7 @@ program -> decls stmts $ #
 block -> { decls stmts } $ #
 decls -> decls decl $ none $ #
 decl -> type Variable ; $ def $ defrec $ #
-cal -> call Variable ( ) $ #
+cal -> call Variable ( Elist ) $ #
 type -> type [ Const ] $ basic $ #
 stmts -> stmts stmt $ none $ #
 noelse -> cal ; $ loc = bool ; $ if ( bool ) noelse $ while ( bool ) noelse $ do stmt while ( bool ) ; $ break ; $ block $ #
@@ -18,4 +18,5 @@ unary -> ! unary $ - unary $ factor $ #
 factor -> ( bool ) $ loc $ Const $ true $ false $ #
 basic -> int $ char $ double $ float $ #
 def -> function Variable ( ) block $ #
-defrec -> record Variable ; $ #
+defrec -> record Variable { decls } $ #
+Elist -> Elist , bool $ bool $ none $ #

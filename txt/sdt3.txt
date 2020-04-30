@@ -1,7 +1,7 @@
 program -> decls stmts |
     program -> {
         offset = 0;
-        offsetFUNC = 0;
+        offset = 0;
     } decls stmts
 
 decls -> decls' |
@@ -13,6 +13,7 @@ stmts -> stmts' |
 block -> <LBR> decls stmts <RBR> |
     block -> <LBR> decls stmts <RBR> {
         block.label = newlabel();
+        block.code = decls.code || stmt.code;
     }
 
 decl -> type <Variable> <SEM> |def |defrec |
@@ -33,6 +34,7 @@ def -> <FUNC> <Variable> <LPA> <RPA> block |
         def.code = block.code;
         enterFUNC (<Variable>.name , offsetFUNC);
         offset += temp;
+    } 
 
 
 defrec -> <RECORD> <Variable> <LBR> decls <RBR> |
@@ -70,39 +72,45 @@ basic -> <INT> |<CHAR> |<LF> |<F> |
     }
 stmt -> <CALL> <Variable> <LPA> Elist <RPA> <SEM> |loc <ASS> bool <SEM> |<IF> <LPA> bool <RPA> noelse stmt1 |<WHL> <LPA> bool <RPA> stmt |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> |<BRK> <SEM> |<LBR> decls stmts <RBR> |
     stmt -> <CALL> <Variable> <LPA> Elist <RPA> <SEM>{
-        stmt.head = nextquad;
         p = lookupFUNC(<Variable>.name);
         if(p == nil) then error;
         cal.code = Elist.code || gen('goto' p.addr);
     }
     stmt -> loc <ASS> bool <SEM> {
-        stmt.head = nextquad;
         p = lookup(loc);
         if(p == nil) then error ;
         stmt.code = bool.code || gen(p.addr "=" bool.addr);
     }
-    stmt -> <IF> <LPA> bool <RPA> noelse stmt1 {
-        stmt.head = nextquad;
-        backpatch(bool.truelist , noelse.head);
-        backpatch(bool.falselist , stmt1.head);
-        stmt.nextlist = merge(merge(stmts1.nextlist , noelse.nextlist), stmt1.nextlist2);
+    stmt -> <IF> {
+        bool.true = newlabel();
+        bool.false = stmt.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        noelse.next = stmt.next;
+    } noelse { gen('goto' stmt.next); } stmt1 {
+        label(bool.false);
+        stmt1.next = stmt.next;
     }
+    stmt -> <WHL> {
+        stmt.begin = newlabel();
+        label(stmt.begin);
+        bool.true = newlabel();
+        bool.false = stmt.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        stmt0.next = stmt.next;
+    } stmt0
 
-    stmt -> <WHL> <LPA> bool <RPA> stmt0 {
-        stmt.head = nextquad;
-        backpatch(stmt0.nextlist , bool.head);
-        backpatch(bool.truelist , stmt0.head);
-        stmt.nextlist = bool.falselist;
-        gen('goto' bool.head);
-    }
-
-    stmt -> <DO> stmt0 <WHL> <LPA> bool <RPA> <SEM> {
-        stmt.head = nextquad;
-        backpatch(stmt0.nextlist , bool.head);
-        backpatch(bool.nextlist , stmt0.head);
-        stmt.next = bool.falselist;
-        gen('goto' bool.head);
-    }
+    stmt -> <DO> {
+        stmt.begin = newlabel();
+        label(stmt.begin);
+    } stmt0 {
+        stmt0.next = stmt.next;
+    } <WHL> <LPA> bool {
+        bool.true = newlabel();
+        bool.false = stmt.next;
+        gen('goto' , stmt.begin);
+    }<RPA> <SEM>
 
     stmt -> <BRK> <SEM> {
         gen('goto' stmt.next);
@@ -111,42 +119,45 @@ stmt -> <CALL> <Variable> <LPA> Elist <RPA> <SEM> |loc <ASS> bool <SEM> |<IF> <L
 noelse -> <CALL> <Variable> <LPA> Elist <RPA> <SEM> |loc <ASS> bool <SEM> |<IF> <LPA> bool <RPA> noelse |<WHL> <LPA> bool <RPA> noelse |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> |<BRK> <SEM> |<LBR> decls stmts <RBR> |
     
     noelse -> <CALL> <Variable> <LPA> Elist <RPA> <SEM>{
-        noelse.head = nextquad;
         p = lookupFUNC(<Variable>.name);
         if(p == nil) then error;
         cal.code = Elist.code || gen('goto' p.addr);
     }
     noelse -> loc <ASS> bool <SEM> {
-        noelse.head = nextquad;
         p = lookup(loc);
         if(p == nil) then error ;
         noelse.code = bool.code || gen(p.addr "=" bool.addr);
     }
+    noelse -> <IF> {
+        bool.true = newlabel();
+        bool.false = noelse.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        noelse1.next = noelse.next;
+    } { gen('goto' noelse.next); } noelse1
 
-    noelse -> <IF> <LPA> bool <RPA> noelse1 {
-        noelse.head = nextquad;
-        backpatch(bool.truelist , noelse.head);
-        noelse.nextlist = merge(bool.falselist,noelse1.nextlist);
-    }
+    noelse -> <WHL> {
+        noelse.begin = newlabel();
+        label(noelse.begin);
+        bool.true = newlabel();
+        bool.false = noelse.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        noelse1.next = noelse.next;
+    } noelse1
 
-    noelse -> <WHL> <LPA> bool <RPA> noelse1{
-        noelse.head = nextquad;
-        backpatch(noelse1.nextlist , bool.head);
-        backpatch(bool.truelist , noelse1.head);
-        noelse.nextlist = bool.falselist;
-        gen('goto' bool.head);
-    }
-
-    noelse -> <DO> noelse1 <WHL> <LPA> bool <RPA> <SEM> {
-        noelse.head = nextquad;
-        backpatch(noelse1.nextlist , bool.head);
-        backpatch(bool.truelist , noelse1.head);
-        noelse.nextlist = bool.falselist;
-        gen('goto' bool.head);
-    }
+    noelse -> <DO> {
+        stmt.begin = newlabel();
+        label(stmt.begin);
+    } noelse1 {
+        noelse1.next = noelse.next;
+    } <WHL> <LPA> bool {
+        bool.true = newlabel();
+        bool.false = noelse.next;
+        gen('goto' , noelse.begin);
+    }<RPA> <SEM>
 
     noelse -> <BRK> <SEM> {
-        noelse.head = nextquad;
         gen('goto' noelse.next);
     }
 
@@ -161,49 +172,20 @@ loc -> <Variable> loc' |
     }
 bool -> join bool' |
     bool -> join bool' {
-        bool.head = nextquad;
         bool.addr = newtemp();
-        if(bool'.isempty == true) then begin 
-            bool'.truelist = join.truelist;
-            bool'.falselist = join.falselist;
-            bool.code = join.code || gen(bool.addr '=' join.addr);
-        end;
-        else begin
-            backpatch(join.falselist , bool'.head);
-            bool.truelist = merge(join.truelist , bool'.truelist);
-            bool.falselist = bool'.falselist;
-            bool.code = join.code || gen(bool.addr '=' join.addr bool'.op bool'.addr);
-        end;
-    } 
+        bool.code = join.code || bool'.code || gen(bool.addr '=' join.addr bool'.op bool'.addr)
+    }
 
 join -> equality join' |
     join -> equality join' {
-        join.head = nextquad;
         join.addr = newtemp();
-        if(join'.isempty == false) then begin
-            join.code = equality.code || join'.code || gen(join.addr '=' equality.addr join'.op join'.addr);
-            join.truelist = makelist(nextquad); 
-            join.falselist = makelist(nextquad+1); 
-            gen('if' equality.addr join'.op join'.addr 'goto _'); 
-            gen('goto _');
-        end;
-        else begin
-            join.code = equality.code || join'.code || gen(join.addr '=' equality.addr);
-            join.truelist = equality.truelist;
-            join.falselist = equality.falselist;
-        end;
+        join.code = expr.code || join'.code || gen(join.addr '=' equality.addr join'.op join'.addr);
     }
 
 equality -> rel equality' |
     equality -> rel equality' {
         equality.addr = newtemp();
         equality.code = rel.code || equality'.code || gen(equality.addr '=' rel.code equality'.op equality'.addr);
-        if(equality'.isempty == false)then begin
-            equality'.truelist = makelist(nextquad); 
-            equality'.falselist = makelist(nextquad+1); 
-            gen('if' rel.addr equality'.op equality'.addr 'goto _'); 
-            gen('goto _');
-        end;
     }
 rel -> expr rel4 | 
     rel -> expr rel4 {
@@ -309,66 +291,50 @@ decls' -> <INT> type' <Variable> <SEM> decls' |<CHAR> type' <Variable> <SEM> dec
 
 stmts' -> <CALL> <Variable> <LPA> Elist <RPA> <SEM> stmts' |<Variable> loc' <ASS> bool <SEM> stmts' |<IF> <LPA> bool <RPA> noelse stmts'5 |<WHL> <LPA> bool <RPA> stmt stmts' |<DO> stmt <WHL> <LPA> bool <RPA> <SEM> stmts' |<BRK> <SEM> stmts' |<LBR> decls stmts <RBR> stmts' ||
     stmts' -> <CALL> <Variable> <LPA> <RPA> <SEM>{
-        stmts'.head = nextquad;
         p = lookupFUNC(<Variable>.name);
         if(p == nil) then error;
         gen('goto' p.addr);
-    } stmts'1 {
-        stmt'1.head = next;
-        backpatch(stmts'.nextlist , stmts'1.head);
-        stmts'.next = stmts'.next;
-    }
-
+    } stmts'
     stmts' -> <Variable> loc' <ASS> bool <SEM> {
-        stmts'.head = nextquad;
         p = lookup(<Variable>.name);
         if(p == nil) then error ;
         p += loc'.offset;
         stmts'.code = bool.code || gen(p.addr "=" bool.addr);
-    } stmts'1 {
-        stmt'1.head = next;
-        backpatch(stmts'.nextlist , stmts'1.head);
-        stmts'.next = stmts'.next;
+    } stmts'1
+    stmts' -> <IF> {
+        bool.true = newlabel();
+        bool.false = stmts'.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        noelse.next = stmts'.next;
+    } noelse { gen('goto' stmts'.next); } stmts'5 {
+        label(bool.false);
+        stmts'5.next = stmts'.next;
     }
+    stmts' -> <WHL> {
+        stmts'.begin = newlabel();
+        label(stmts'.begin);
+        bool.true = newlabel();
+        bool.false = stmts'.next;
+    } <LPA> bool <RPA> {
+        label(bool.true);
+        stmt.next = stmts'.next;
+    } stmt stmts'1
 
-    stmts' -> <IF> <LPA> bool <RPA> noelse stmts'5{
-        stmts'.head = nextquad;
-        backpatch(bool.truelist , noelse.head);
-        backpatch(bool.falselist , stmts'5.head);
-        stmts'.nextlist = merge(merge(stmts'5.nextlist , noelse.nextlist), stmt'5.nextlist2);
-    }
-
-    stmts' -> <WHL> <LPA> bool <RPA> stmt {
-        stmts'.head = nextquad;
-        backpatch(stmt.nextlist , bool.head);
-        backpatch(bool.truelist , stmt.head);
-        stmts'.nextlist = bool.falselist;
-        gen('goto' bool.head);
-    } stmts'1 {
-        stmt'1.head = next;
-        backpatch(stmts'.nextlist , stmts'1.head);
-        stmts'.next = stmts'.next;
-    }
-
-    stmts' -> <DO> stmt <WHL> <LPA> bool <RPA> <SEM> {
-        stmts'.head = nextquad;
-        backpatch(stmt.nextlist , bool.head);
-        backpatch(bool.nextlist , stmt.head);
-        stmts'.next = bool.falselist;
-        gen('goto' bool.head);
-    } stmts'1 {
-        stmt'1.head = next;
-        backpatch(stmts'.nextlist , stmts'1.head);
-        stmts'.next = stmts'.next;
-    }
+    stmts' -> <DO> {
+        stmt.begin = newlabel();
+        label(stmts'.begin);
+    } stmt {
+        stmt.next = stmts'.next;
+    } <WHL> <LPA> bool {
+        bool.true = newlabel();
+        bool.false = stmts'.next;
+        gen('goto' , stmts'.begin);
+    }<RPA> <SEM> stmts'
 
     stmts' -> <BRK> <SEM> {
         gen('goto' stmts'.next);
-    } stmts'1 {
-        stmt'1.head = next;
-        backpatch(stmts'.nextlist , stmts'1.head);
-        stmts'.next = stmts'.next;
-    }
+    } stmts' 
 
 type' -> <LAT> <Const> <RAT> type' ||
     type' -> <LAT> <Const> <RAT> type'1 {
@@ -412,67 +378,37 @@ Elist' -> <DH> bool Elist' ||
 
 bool' -> <OR> join bool' ||
     bool' -> <OR> join bool'1 {
-        bool'.head = nextquad;
-        bool'.isempty = false;
         bool'.addr = newtemp();
-        bool'.code = join.code || bool'1.code || gen(bool'.addr '=' join.addr bool'1.op bool'1.addr);
-        bool'.op = '||';
-        backpatch(join.falselist , bool'1.head);
-        bool'.truelist = merge(join.truelist , bool'1.truelist);
-        bool'.falselist = bool'1.falselist;
+        if(bool'1.empty == true) then begin 
+            bool'.op = '|';
+            bool'.code = join.code || gen(bool'.addr '=' join.addr);
+        end; 
+        else begin 
+            bool'.op = '|';
+            bool'.code = join.code || bool'1.code ||gen(bool'.addr '=' join.addr bool'1.op bool'1.addr);
+        end;
     }
-
     bool' -> || {
-        bool'.head = nextquad;
-        bool'.isempty = true;
-        bool'.falselist = makelist(nextquad);
-        gen('goto_');
+        bool'.empty = true;
     }
 
 
 join' -> <AND> equality join' ||
     join' -> <AND> equality join'1 {
-        join'.isempty = false;
         join'.addr = newtemp();
         join'.code = equality.code || join'1.code || gen(join'.addr '=' equality.addr join'1.op join'1.addr);
-        join'.op = '&&';
-        join'1.head = nextquad;
-        backpatch(equality.truelist , join'1.head);
-        join.truelist = equality.truelist;
-        join.falselist = merge(equality.falselist , join'.falselist);
-    }
-
-    join' -> || {
-        join'.isempty = true;
-        gen('goto' join'.true);
+        join'.op = '&';
     }
 equality' -> <EQU> rel equality' |<NOTE> rel equality' ||
     equality' -> <EQU> rel equality'1 {
-        equality'.isempty = false;
         equality'.addr = newtemp();
         equality'.code = rel.code || equality'1.code || gen(equality'.addr '=' rel.addr equality'1.op equality'1.addr);
         equality'.op = '==';
-        if(equality'1.isempty == false)then begin
-            equality'.truelist = makelist(nextquad); 
-            equality'.falselist = makelist(nextquad+1); 
-            gen('if' rel.addr equality'1.op equality'1.addr 'goto _'); 
-            gen('goto _');
-        end;
     }
     equality' -> <NOTE> rel equality'1 {
-        equality'.isempty = true;
         equality'.addr = newtemp();
         equality'.code = rel.code || equality'1.code || gen(equality'.addr '=' rel.addr equality'1.op equality'1.addr);
         equality'.op = '!=';
-        if(equality'1.isempty == false)then begin
-            equality'.truelist = makelist(nextquad); 
-            equality'.falselist = makelist(nextquad+1); 
-            gen('if' rel.addr equality'1.op equality'1.addr 'goto _'); 
-            gen('goto _');
-        end;
-    }
-    equality' -> || {
-        equality'.isempty = true;
     }
 
 
@@ -502,11 +438,6 @@ term' -> <MUL> unary term' |<DIV> unary term' ||
     }
     
 stmt1 -> |<ELSE> noelse |
-    stmt1 -> <ELSE> noelse {
-        stmt.head = nextquad;
-        stmt.nextlist = makelist(nextlist);
-        stmt.nextlist2 = noelse.nextlist;
-    }
 
 rel2 -> <L> expr |<LE> expr |<G> expr |
     rel2 -> <L> expr {
@@ -550,14 +481,3 @@ rel4 -> rel3 ||
     }
 
 stmts'5 -> stmts' |<ELSE> noelse stmts' |
-    stmts'5 -> stmt' {
-        stmts'5.iselse = false;
-        stmts'5.head = nextquad;
-    }
-    stmts'5 -> {
-        stmts'5.head = nextquad;
-        stmts'5.nextlist = makelist(nextquad);
-        gen('goto _');
-    } <ELSE> noelse {
-        stmts'5.nextlist2 = noelse.nextlist;
-    }stmts'

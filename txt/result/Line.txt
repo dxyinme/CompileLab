@@ -1,0 +1,45 @@
+line 1:(=,3,_,z)         z=3
+line 2:(=,4,_,p)         p=4
+line 3:(ret,_,_,_)         return
+line 4:(*,4,1,_t1)         _t1=4*1
+line 5:(*,3,30,_t2)         _t2=3*30
+line 6:(+,_t2,_t1,_t2)         _t2=_t2+_t1
+line 7:(*,2,600,_t3)         _t3=2*600
+line 8:(+,_t3,_t2,_t3)         _t3=_t3+_t2
+line 9:(*,2,3,_t4)         _t4=2*3
+line 10:(/,_t4,4,_t5)         _t5=_t4/4
+line 11:(+,5,6,_t6)         _t6=5+6
+line 12:(*,_t5,_t6,_t7)         _t7=_t5*_t6
+line 13:(+,1,_t7,_t8)         _t8=1+_t7
+line 14:(=,_t8,_,a[_t3])         a[_t3]=_t8
+line 15:(jnz,2,_,-16)        if 2 not bitwise-zero goto 17
+line 16:(j,_,_,-15)         goto 21
+line 17:(j<,1,3,-17)        if 1<3 goto 19
+line 18:(j,_,_,-15)         goto 21
+line 19:(j<,2,4,-18)        if 2<4 goto 27
+line 20:(j,_,_,-15)         goto 21
+line 21:(j<,3,4,-20)        if 3<4 goto 27
+line 22:(j,_,_,-19)         goto 23
+line 23:(j<,5,6,-22)        if 5<6 goto 25
+line 24:(j,_,_,-21)         goto 29
+line 25:(j<,8,9,-23)        if 8<9 goto 27
+line 26:(j,_,_,-21)         goto 29
+line 27:(=,1,_,x)         x=1
+line 28:(j,_,_,-26)         goto 30
+line 29:(=,2,_,x)         x=2
+line 30:(=,3,_,x)         x=3
+line 31:(je,x,4,-35)        if x==4 goto 30
+line 32:(j,_,_,-34)         goto 33
+line 33:(jne,x,5,-39)        if x!=5 goto 35
+line 34:(j,_,_,-38)         goto 37
+line 35:(=,6,_,x)         x=6
+line 36:(j,_,_,-36)         goto 33
+line 37:(=,222,_,x)         x=222
+line 38:(+,1,2,_t21)         _t21=1+2
+line 39:(+,3,4,_t22)         _t22=3+4
+line 40:(param,_,_,_t21)         param _t21
+line 41:(param,_,_,_t22)         param _t22
+line 42:(call,2,_,y)         call function y(with 2 params,goto 1)
+line 43:(*,6,7,_t23)         _t23=6*7
+line 44:(param,_,_,_t23)         param _t23
+line 45:(call,1,_,y)         call function y(with 1 params,goto 1)

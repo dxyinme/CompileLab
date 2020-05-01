@@ -33,7 +33,7 @@ def -> <FUNC> <Variable> <LPA> <RPA> block |
         def.code = block.code;
         enterFUNC (<Variable>.name , offsetFUNC);
         offset += temp;
-
+    }
 
 defrec -> <RECORD> <Variable> <LBR> decls <RBR> |
     defrec -> <RECORD> <Variable> <LBR> decls <RBR> {

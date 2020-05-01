@@ -492,6 +492,12 @@ namespace Parser{
                 cout << s << endl;
             }
         }
+        fclose(stdout);
+    }
+
+    //输出符号表
+    void printVariable(string filename){
+        freopen(filename.c_str() , "w" , stdout);
         SDT::SDTNode *sdtroot = new SDT::Program;
         sdtroot->dfs(resultTree[0], nullptr);
         for(auto &t:SDT::vars){
@@ -500,6 +506,12 @@ namespace Parser{
         for(auto &t:SDT::funcs){
             cout<<"function "<<t.first<<" offset "<<t.second<<endl;
         }
+        fclose(stdout);
+    }
+
+    //输出四元式序列
+    void printLine(string filename){
+        freopen(filename.c_str() , "w" , stdout);
         int lm = -1;
         for(auto &t:SDT::codes){
             lm++;if(lm==0)continue;

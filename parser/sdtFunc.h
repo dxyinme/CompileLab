@@ -4,7 +4,6 @@
 
 #ifndef COMPILELAB_SDTFUNC_H
 #define COMPILELAB_SDTFUNC_H
-
 #include <iostream>
 #define SON(x) resultTree[treeNode.sons[(x)]],this
 #define TNAME(x) resultTree[treeNode.sons[(x)]].attr
@@ -74,6 +73,8 @@ namespace SDT {
                     num=num*10+(t-'0');
                 }else if(t==','){
                     flag = true;
+                }else{
+                    cout << "must be an integer"<<endl;
                 }
             }else{
                 if(t==')') break;

@@ -9,7 +9,7 @@ char         <CHAR        ,_           >1
 20           <Const       ,20          >1
 ]            <RAT         ,_           >1
 [            <LAT         ,_           >1
-30           <Const       ,30          >1
+30.0         <Const       ,30.0        >1
 ]            <RAT         ,_           >1
 a            <Variable    ,a           >1
 ;            <SEM         ,_           >1

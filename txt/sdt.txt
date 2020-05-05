@@ -1,3 +1,26 @@
+newlabel : 生成一个用于存放标号的新的临时变量L，返回变量地址
+label(L) : 将下一条三地址指令的标号赋给L
+offset : 对于变量来说，下一个可用的地址
+offsetFUNC : 对于函数来说，下一个可用的地址
+Type : 类型
+Width : 类型的字节数
+enter(name , type , width , offset) : 在符号表offset位置创建名字为name的记录，将name的类型设为type , 占用宽度设为width
+code : 表示当前模块的三地址指令
+gen( code ) : 生成对应的三地址指令
+lookup(name) : 找到name对应的变量的偏移量
+lookupFUNC(name) : 找到name对应的函数的偏移量
+addr : 表示当前块对应的偏移量
+newtemp() : 生成一个新的变量
+head : 这个块的起点的地址
+truelist : 指向一个指向当前值为真的包含跳转指令的列表。
+falselist : 指向一个指向当前值为假的包含跳转指令的列表。
+nextlist : 
+makelist(i) : 创建一个只包含i的列表,i是跳转指令的标号,函数返回指向新创建的列表的指针
+merge(p1,p2): 将p1和p2指向的列表进行合并,返回指向合并后的列表的指针
+backpatch( p,i) : 将i作为目标标号插入到p所指列表中的各指令中  
+quad : 当前块的列表标号
+nextquad :返回下一个列表的标号。
+
 program -> decls stmts |
     program -> {
         offset = 0;

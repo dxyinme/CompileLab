@@ -4,7 +4,6 @@
 
 #ifndef COMPILELAB_SDTFUNC_H
 #define COMPILELAB_SDTFUNC_H
-
 #include <iostream>
 #define SON(x) resultTree[treeNode.sons[(x)]],this
 #define TNAME(x) resultTree[treeNode.sons[(x)]].attr
@@ -19,6 +18,15 @@ struct TreeNode{
 vector<TreeNode> resultTree(1);
 
 namespace SDT {
+    vector<string> errVec;
+    void ERROR(int line,string sgn){
+        stringstream ss;
+        ss.str("");
+        ss << line;
+        string o;
+        ss >> o;
+        errVec.push_back("Error at Line "+ o +": " + sgn);
+    }
     int offset=0,offsetFUNC=0,labelId=1,w=0,temp=0,cntTemp=0;
     string t="";
     bool inEval= false;
@@ -160,6 +168,18 @@ namespace SDT {
             TypeP *typeP_1 = new TypeP;
             sons.push_back(typeP_1);
             num = atoi((TNAME(1)).c_str());
+            for(int i=0;i<TNAME(1).size();i++){
+                if (TNAME(1)[i] == '-'){
+                    ERROR(treeNode.lineNum , TNAME(1) + " not an integer");
+                    break;
+                }
+                if (TNAME(1)[i] == '.'){
+                    ERROR(treeNode.lineNum , TNAME(1) + " not an integer");
+                    break;
+                }
+            }
+            if(num <= 0) ERROR(treeNode.lineNum , TNAME(1) + " not a positive integer");
+            // cout << " TYPE : " << num << " " << TNAME(1) << endl;
             typeP_1->type = type;
             typeP_1->dfs(SON(3));
             type = packArray(num,typeP_1->type);

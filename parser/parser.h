@@ -492,14 +492,34 @@ namespace Parser{
                 cout << s << endl;
             }
         }
+        fclose(stdout);
+    }
+
+    //输出符号表
+    void printVariable(string filename){
         SDT::SDTNode *sdtroot = new SDT::Program;
+        SDT::errVec.clear();
         sdtroot->dfs(resultTree[0], nullptr);
-        for(auto &t:SDT::vars){
-            cout<<"variable "<<t.first<<" : type->"<<t.second.first<<" offset->"<<t.second.second<<" width->"<<SDT::varwidth[t.first]<<endl;
+        freopen(filename.c_str() , "w" , stdout);
+        if(SDT::errVec.size() != 0){
+            for(string s : SDT::errVec){
+                cout << s << endl;
+            }
         }
-        for(auto &t:SDT::funcs){
-            cout<<"function "<<t.first<<" offset "<<t.second<<endl;
+        else {
+            for(auto &t:SDT::vars){
+                cout<<"variable "<<t.first<<" : type->"<<t.second.first<<" offset->"<<t.second.second<<" width->"<<SDT::varwidth[t.first]<<endl;
+            }
+            for(auto &t:SDT::funcs){
+                cout<<"function "<<t.first<<" offset "<<t.second<<endl;
+            }
         }
+        fclose(stdout);
+    }
+
+    //输出四元式序列
+    void printLine(string filename){
+        freopen(filename.c_str() , "w" , stdout);
         int lm = -1;
         for(auto &t:SDT::codes){
             lm++;if(lm==0)continue;

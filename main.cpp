@@ -26,7 +26,9 @@ int main(){
 	} 
 	Parser::init(prefix+"generator.txt");
 	Parser::goParser(newLexRes);
+
 	Parser::printFile(prefix+"result/"+"parser.txt");
+
 	Parser::printVariable(prefix+"result/"+"Variable.txt");
 	Parser::printLine(prefix+"result/"+"Line.txt");
 	return 0;

@@ -7,6 +7,7 @@
 #include <iostream>
 #define SON(x) resultTree[treeNode.sons[(x)]],this
 #define TNAME(x) resultTree[treeNode.sons[(x)]].attr
+#define strictMode
 struct TreeNode{
     vector<int> sons;
     string name,attr;
@@ -16,7 +17,6 @@ struct TreeNode{
     TreeNode(int _n,string _name,string _attr):lineNum(_n),name(_name),attr(_attr){}
 };
 vector<TreeNode> resultTree(1);
-
 namespace SDT {
     vector<string> errVec;
     void ERROR(int line,string sgn){
@@ -27,19 +27,18 @@ namespace SDT {
         ss >> o;
         errVec.push_back("Error at Line "+ o +": " + sgn);
     }
-    int offset=0,offsetFUNC=0,labelId=1,w=0,temp=0,cntTemp=0;
-    string t="";
-    bool inEval= false;
+    int offset=0,labelId=1,cntTemp=0;
+    bool inEval= false,inAss=false;
+    string lType="",rType="";
     map<string,pair<string,int> > vars;
     map<string,int> varwidth;
-    map<string,int> funcs,funcAddr;
-    map<string,string> funCode;
+    map<string,int> funcs;
     vector<string> q;
     vector<int> tempLabel;
     struct CodeLine{
         string op,t1,t2,res;
-
     };
+    bool isl=false;
     vector<CodeLine> codes(1);
     int newLabel(){
         tempLabel.push_back(0);
@@ -60,7 +59,6 @@ namespace SDT {
     }
     bool checkvar(const string &name){
         if(vars.count(name)) return true;
-        cout<<"ERROR"<<endl;
         return false;
     }
     void gen(const string &op,const string &t1,const string &t2,const string &res){
@@ -88,6 +86,7 @@ namespace SDT {
                 dType += t;
             }
         }
+        if(dType[0]=='a') dType+=")";
         return make_pair(num,dType);
     }
     int getTypeWidth(const string &type){
@@ -149,7 +148,8 @@ namespace SDT {
         now->sons.push_back(elist_1);
         elist_1->dfs(resultTree[treeNode.sons[3]],now);
         if(!funcs.count(TNAME(1))){
-            cout<<"ERROR"<<endl;
+            ERROR(treeNode.lineNum ,"Function not declared "+TNAME(1));
+            return;
         }
         int n = 0;
         for(auto &t:q){
@@ -173,13 +173,12 @@ namespace SDT {
                     ERROR(treeNode.lineNum , TNAME(1) + " not an integer");
                     break;
                 }
-                if (TNAME(1)[i] == '.'){
+                if (TNAME(1)[i] == '.'||TNAME(1)[i] == 'e'||TNAME(1)[i] == 'E'){
                     ERROR(treeNode.lineNum , TNAME(1) + " not an integer");
                     break;
                 }
             }
             if(num <= 0) ERROR(treeNode.lineNum , TNAME(1) + " not a positive integer");
-            // cout << " TYPE : " << num << " " << TNAME(1) << endl;
             typeP_1->type = type;
             typeP_1->dfs(SON(3));
             type = packArray(num,typeP_1->type);
@@ -199,7 +198,8 @@ namespace SDT {
                 typeP->type = "int";
                 typeP->dfs(SON(1));
                 if(vars.count(prefix+TNAME(2))){
-                    cout<<"ERROR"<<endl;
+                    ERROR(treeNode.lineNum,prefix+TNAME(2)+" has already declared");
+                    return;
                 }
                 if(typeP->num <= 0){
                     width = getTypeWidth("int");
@@ -220,7 +220,8 @@ namespace SDT {
                 typeP->type = "char";
                 typeP->dfs(SON(1));
                 if(vars.count(prefix+TNAME(2))){
-                    cout<<"ERROR"<<endl;
+                    ERROR(treeNode.lineNum,prefix+TNAME(2)+" has already declared");
+                    return;
                 }
                 if(typeP->num <= 0){
                     width = getTypeWidth("char");
@@ -242,7 +243,8 @@ namespace SDT {
                 typeP->type = "double";
                 typeP->dfs(SON(1));
                 if(vars.count(prefix+TNAME(2))){
-                    cout<<"ERROR"<<endl;
+                    ERROR(treeNode.lineNum,prefix+TNAME(2)+" has already declared");
+                    return;
                 }
                 if(typeP->num <= 0){
                     width = getTypeWidth("double");
@@ -263,7 +265,8 @@ namespace SDT {
                 typeP->type = "float";
                 typeP->dfs(SON(1));
                 if(vars.count(prefix+TNAME(2))){
-                    cout<<"ERROR"<<endl;
+                    ERROR(treeNode.lineNum,prefix+TNAME(2)+" has already declared");
+                    return;
                 }
                 if(typeP->num <= 0){
                     width = getTypeWidth("float");
@@ -281,6 +284,10 @@ namespace SDT {
                 DeclsP *declsP_1 = new DeclsP;
                 sons.push_back(block_1);
                 sons.push_back(declsP_1);
+                if(funcs.count(prefix+TNAME(1))){
+                    ERROR(treeNode.lineNum,prefix+TNAME(1)+" has already declared");
+                    return;
+                }
                 enterFUNC(prefix+TNAME(1),labelId);
                 block_1->dfs(SON(4));
                 gen("ret","_","_","_");
@@ -296,7 +303,8 @@ namespace SDT {
                 decls_1->prefix=prefix+TNAME(1)+".";
                 decls_1->dfs(SON(3));
                 if(vars.count(prefix+TNAME(1))){
-                    cout<<"ERROR"<<endl;
+                    ERROR(treeNode.lineNum,prefix+TNAME(1)+" has already declared");
+                    return;
                 }
                 enter(TNAME(1),"struct("+to_string(decls_1->width)+")",offsetTemp,decls_1->width);
                 declsP_1->prefix = prefix;
@@ -327,19 +335,43 @@ namespace SDT {
             if(treeNode.opt==0){
                 Bool *bool_1 = new Bool;
                 sons.push_back(bool_1);
+                bool t_inEval = inEval;
+                inEval=true;
                 bool_1->dfs(SON(1));
+                inEval=t_inEval;
                 addr = bool_1->addr;
             }else if(treeNode.opt==1){
                 LocP *locP_1 = new LocP;
-                if(!checkvar(TNAME(0)))
+                if(!checkvar(TNAME(0))){
+                    ERROR(treeNode.lineNum,"Not declared "+TNAME(0));
                     return;
+                }
+                isl=false;
                 locP_1->type = vars[TNAME(0)].first;
                 locP_1->width = varwidth[TNAME(0)];
                 locP_1->dfs(SON(1));
+                if(inAss && rType != lType){
+#ifdef strictMode
+                    ERROR(treeNode.lineNum,"Assign value with wrong type to "+lType);
+                    return;
+#endif
+                }
                 if(!locP_1->offset.empty())addr = TNAME(0)+"["+locP_1->offset+"]";
                 else addr = TNAME(0);
             }else if(treeNode.opt==2){
                 addr = TNAME(0);
+                if(inAss){
+                    bool isf=false;
+                    for(auto t:TNAME(0)){
+                        if(t=='.'||t=='E'||t=='e'){
+                            isf=true;
+                        }
+                    }
+                    if((isf&&(lType=="int"||lType=="char"))||(!isf&&(lType=="float"||lType=="double"))){
+                        ERROR(treeNode.lineNum,"Assign value "+TNAME(0)+" is not match with type "+lType);
+                        return;
+                    }
+                }
             }else if(treeNode.opt==3){
                 addr = "1";
             }else if(treeNode.opt==4){
@@ -711,10 +743,25 @@ namespace SDT {
             boolP_1->dfs(SON(2));
             addr = boolP_1->addr;
             orLast = boolP_1->orLast;
+//            delete list;
         }
     };
     void LocP::dfs(TreeNode &treeNode,SDTNode *fa) {
-        if (treeNode.sons.empty())return;
+        if (treeNode.sons.empty()){
+            if(type[0]=='a'){
+                ERROR(treeNode.lineNum,"Type error : "+type+" can't use here");
+                return;
+            }
+
+            if(isl){
+                lType=type;
+            }
+            else{
+
+                rType=type;
+            }
+            return;
+        }
         Bool *bool_1 = new Bool;
         LocP *locP = new LocP;
         sons.push_back(bool_1);
@@ -724,6 +771,9 @@ namespace SDT {
         if(type[0]=='a'){
             locP->type = divideType(type).second;
             locP->width = getTypeWidth(locP->type);
+        }else{
+            ERROR(treeNode.lineNum,"Type error : "+type+" can't use with []");
+            return;
         }
         locP->dfs(SON(3));
         offset = newtemp();
@@ -754,12 +804,15 @@ namespace SDT {
     }
     struct Loc : SDTNode{
         pair<string,int> array;
-        string addr;
+        string addr,lName;
         virtual void dfs(TreeNode &treeNode,SDTNode *fa) {
             if (treeNode.sons.empty()) return;
             LocP *locP_1 = new LocP;
-            if(!checkvar(TNAME(0)))
+            if(!checkvar(TNAME(0))){
+                ERROR(treeNode.lineNum,"Not declared "+TNAME(0));
                 return;
+            }
+            lName = TNAME(0);
             locP_1->type = vars[TNAME(0)].first;
             locP_1->width = varwidth[TNAME(0)];
             inEval=true;
@@ -790,8 +843,12 @@ namespace SDT {
                 Bool *bool1 = new Bool;
                 sons.push_back(loc1);
                 sons.push_back(bool1);
+                isl=true;
                 loc1->dfs(SON(0));
+                inAss=true;
+                inEval=true;
                 bool1->dfs(SON(2));
+                inAss=false;
                 gen("=",bool1->addr,"_",loc1->addr);
             }else if(treeNode.opt==2){
                 Bool *bool_1 = new Bool;
@@ -881,8 +938,12 @@ namespace SDT {
             Bool *bool1 = new Bool;
             sons.push_back(loc1);
             sons.push_back(bool1);
+            isl=true;
             loc1->dfs(SON(0));
+            inAss=true;
+            inEval=true;
             bool1->dfs(SON(2));
+            inAss = false;
             gen("=",bool1->addr,"_",loc1->addr);
         }else if(treeNode.opt==2){
             Bool *bool_1 = new Bool;
@@ -975,13 +1036,19 @@ namespace SDT {
                 LocP *locP_1 = new LocP;
                 Bool *bool_1 = new Bool;
                 StmtsP *stmtsP = new StmtsP;
-                if(!checkvar(TNAME(0)))
+                if(!checkvar(TNAME(0))){
+                    ERROR(treeNode.lineNum,"Not declared "+TNAME(0));
                     return;
+                }
+
+                isl=true;
                 locP_1->type = vars[TNAME(0)].first;
                 locP_1->width = varwidth[TNAME(0)];
                 locP_1->dfs(SON(1));
                 inEval=true;
+                inAss=true;
                 bool_1->dfs(SON(3));
+                inAss=false;
                 if(!locP_1->offset.empty())gen("=",bool_1->addr,"_",TNAME(0)+"["+locP_1->offset+"]");
                 else gen("=",bool_1->addr,"_",TNAME(0));
                 stmtsP->dfs(SON(5));
@@ -1028,7 +1095,9 @@ namespace SDT {
                 gen("j","_","_",to_string(gotoBegin));
                 writeLabel(stmt->gotoNext);
                 writeLabel(bool_1->orLast);
+                writeLabel(gotoNext);
                 stmtsP->dfs(SON(5));
+
             }else if(treeNode.opt==4){
                 Stmt *stmt_1 = new Stmt;
                 Bool *bool_1 = new Bool;
@@ -1049,6 +1118,7 @@ namespace SDT {
                 }
                 writeLabel(stmt_1->gotoNext);
                 writeLabel(bool_1->orLast);
+                writeLabel(gotoNext);
                 stmtsP->dfs(SON(7));
             }else if(treeNode.opt==5){
                 Stmts *stmts = new Stmts;
@@ -1108,7 +1178,8 @@ namespace SDT {
     struct Program : SDTNode{
         virtual void dfs(TreeNode &treeNode,SDTNode *fa){
             if(treeNode.sons.empty()) return;
-            offset=offsetFUNC=0;
+
+            offset=0;
             Decls *decls_1 = new Decls;
             Stmts *stmts_1 = new Stmts;
             sons.push_back(decls_1);

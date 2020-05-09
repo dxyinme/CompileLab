@@ -483,6 +483,7 @@ namespace Parser{
 
     //输出到文件
     void printFile(string filename){
+
         freopen(filename.c_str() , "w" , stdout);
         if(errVec.size() == 0){
             print(resultTree[0] , 1);
@@ -492,15 +493,17 @@ namespace Parser{
                 cout << s << endl;
             }
         }
-        fclose(stdout);
+        //fclose(stdout);
+
     }
 
     //输出符号表
     void printVariable(string filename){
         SDT::SDTNode *sdtroot = new SDT::Program;
         SDT::errVec.clear();
-        sdtroot->dfs(resultTree[0], nullptr);
         freopen(filename.c_str() , "w" , stdout);
+
+        sdtroot->dfs(resultTree[0], nullptr);
         if(SDT::errVec.size() != 0){
             for(string s : SDT::errVec){
                 cout << s << endl;
@@ -514,13 +517,18 @@ namespace Parser{
                 cout<<"function "<<t.first<<" offset "<<t.second<<endl;
             }
         }
-        fclose(stdout);
+        delete sdtroot;
+        //fclose(stdout);
     }
 
     //输出四元式序列
     void printLine(string filename){
         freopen(filename.c_str() , "w" , stdout);
         int lm = -1;
+        if(!SDT::errVec.empty()){
+            cout<<"Compile Error!";
+            return;
+        }
         for(auto &t:SDT::codes){
             lm++;if(lm==0)continue;
             cout<<"line "<<lm<<":("<<t.op<<","<<t.t1<<","<<t.t2<<","<<t.res<<")";
@@ -544,8 +552,12 @@ namespace Parser{
                 cout<<"         "<<t.res<<"="<<t.t1;
             }else if(t.op=="ret"){
                 cout<<"         "<<"return";
-            }else if(t.op=="*"||t.op=="/"||t.op=="+"||t.op=="-"){
-                cout<<"         "<<t.res<<"="<<t.t1<<t.op<<t.t2;
+            }else if(t.op=="*"||t.op=="/"||t.op=="+"||t.op=="-"||t.op=="OR"||t.op=="AND"){
+                cout<<"         "<<t.res<<"="<<t.t1<<" "<<t.op<<" "<<t.t2;
+            }else if(t.op=="neg"){
+                cout<<"         "<<t.res<<"= -"<<t.t1;
+            }else if(t.op=="not"){
+                cout<<"         "<<t.res<<"= !"<<t.t1;
             }else if(t.op=="param"){
                 cout<<"         "<<"param "<<t.res;
             }else if(t.op=="call"){
@@ -553,6 +565,7 @@ namespace Parser{
             }
             cout<<endl;
         }
-        fclose(stdout);
+        cout<<"line "<<++lm<<":";
+        //fclose(stdout);
     }
 }
